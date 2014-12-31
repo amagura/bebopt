@@ -1,0 +1,17 @@
+# vim:ft=coffee:
+a = null
+b = switch a
+  when null
+    'arg'
+  else
+    'no'
+console.log b
+#bebopt = require './bebopt'
+#args = bebopt
+## .detail(['help', '::'], 'print this message and exit', () ->
+##    console.log('help')
+##    process.exit(0))
+##  .describe(['version', '::'], 'print program version and exit', () ->
+##    console.log('version')
+##    process.exit(0))
+  #.alias('help', 'help')
