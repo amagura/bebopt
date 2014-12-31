@@ -9,4 +9,5 @@ Because too many of the option parsers available for node.js suffer from either 
 <sup>a</sup>
 Seemingly *low-level*<sup>c</sup> code does not faze me, but there seem to be a lot of developers that get scared when they see that you have to use a `while` loop and a `switch` statement to use them.
 > *Ooooh, Noes!*  I have to write three more lines of code just to do something correctly instead of just writing one line of code and barely managing to get away with it!
+
 <sup>c</sup>Apparently, in javascript at least, this refers to any amount of boilerplate code that's longer than 3-5 lines.
