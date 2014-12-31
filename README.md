@@ -9,7 +9,7 @@ Because too many of the option parsers available for node.js suffer from either 
 <sup>**a**</sup>
 Seemingly *low-level* <sup>***c***</sup> code does not faze me, but there seem to be a lot of developers that get scared when they see that you have to use a `while` loop and a `switch` statement to use them.  I would only avoid *low-level* code where it is possible to do so without sacrificing control.
 
-> *Ooooh, Noes!*  I have to write three more lines of code just to do something correctly instead of just writing one line of code and barely managing to get away with it!
+> *Ooooh, Noes!*  I have to write three more lines of code just to do something correctly instead of just writing one line of code that will only work as long as X doesn't happen.  (X always happens... eventually)
 
 <sup>**b**</sup>As in, options inadvertantly get parsed in the order that they are checked or defined rather than in the order which they appear on the command-line.
 
