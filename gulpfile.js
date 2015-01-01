@@ -19,11 +19,11 @@ gulp.task('coffee', function() {
 gulp.task('coffeelint', function() {
   gulp.src(srcdir + '/*.coffee')
     .pipe(clint())
-    .pipe(clint.reporter());
+    .pipe(clint.reporter())
+    .pipe(clint.reporter('fail'));
 });
 
 gulp.task('pp', function() {
-  gulp.src('./src/*.coffee')
+  gulp.src(srcdir + '/*.coffee')
     .pipe(gpp({ context: { DEBUG: false }}));
 });
-
