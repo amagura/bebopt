@@ -47,7 +47,7 @@ var args = require('optimist')
 // can also be done in a really ugly way like so:
 // Object.keys(args).slice(Object.keys(args).indexOf('$0') + 1)
 Object.keys(args).slice(2).forEach(function(key) {
-  /* ... process args using a switch ... */
+  /* process args using a switch */
 });
 ```
 I say _sort of_ because the above solution doesn't capture [commands](https://github.com/substack/node-optimist#and-non-hypenated-options-too-just-use-argv_).
