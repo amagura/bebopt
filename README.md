@@ -27,7 +27,7 @@ if (args.h)
   process.exit(0);
 ```
 
-Because `-v` is handled before `-h`, even if you run `node ex.js -h -v`, the version string will always get printed _instead of_ the expected usage information.
+Because `-v` is handled before `-h`; so even if you run `node ex.js -h -v`, the version string will always get printed _instead of_ the expected usage information.
 
 ***
 
