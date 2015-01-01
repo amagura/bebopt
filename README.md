@@ -1,9 +1,6 @@
 # Bebopt
 a more powerful, and coincidentally musical, option parser for node.js/coffeescript
 
-### NOTE
-You do not need to compile Bebopt.  Only compile Bebopt if you intend to use it in JavaScript, else just use it as is.
-
 # Why another option parser?
 Because too many of the option parsers available for node.js suffer from being either too low-level but powerful, or too high-level but weak.  In node.js, at least, it seems that the smarter a program is, the less control it gives the end-user.
 
