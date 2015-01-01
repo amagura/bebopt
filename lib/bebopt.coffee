@@ -30,7 +30,6 @@ class Bebopt
     @__pargs = [] # processed args
     @__uargs = {} # user-ready args
 
-
   _refError: (ref) =>
     if typeof(ref) is 'string'
       if ref[0] isnt '#'
@@ -128,7 +127,6 @@ class Bebopt
     else
       return ref
 
-
   op: (code, help) =>
     if @_parent is null
       err = "Bebopt: null parent ref: cannot apply opcode: '#{code}'"
@@ -162,7 +160,6 @@ class Bebopt
       _ref = @_checkOption(dRef)
       _ref.name = dRef.child
       return _ref)
-
 
   parse: () =>
     @_gather()

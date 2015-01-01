@@ -3,22 +3,20 @@ cwd := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 node := /usr/bin/env node
 npm := /usr/bin/env npm
 coffee := ${rootdir}/node_modules/coffee-script/bin/coffee
+coffeelint := ${rootdir}/node_modules/coffeelint/bin/coffeelint
 
 SRC = ${rootdir}/index.coffee ${rootdir}/lib/bebopt.coffee
 
 
 all: lint
-	${coffee} ${rootdir}/index.
 
 build:
-	$(foreach 
-	${coffee} -c ${rootdir}/index.coffee
-	${coffee} -
+	$(foreach f,$(SRC),${coffee} -c $(f);)
 
 deps:
-	${npm} install {-dev,''}
+	cd ${rootdir}; ${npm} install
 
-lint:
+lint: deps coffeelint
 
 coffeelint:
-
+	$(foreach f,$(SRC),${coffeelint} -f ${rootdir}/coffeelint.json --rules rule.coffee $(f);)
