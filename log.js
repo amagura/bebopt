@@ -6,12 +6,13 @@ var winston = require('winston')
 
 function Logger() {
   this.app = this.app || undefined;
-  this.log = this.log || 'silly';
+  this.log = this.log || 'GOOFY';
   this.levels = {};
   this.colors = {};
   var self = this
     , idx = 0;
   [
+    [ 'GOOFY', 'zebra blackBG white inverse'],
     [ 'status', 'light blue zebra' ],
     [ 'silly', 'rainbow' ], // level-name, level-color
     [ 'verbose', 'magenta' ],
@@ -79,27 +80,35 @@ Logger.prototype.setLoudErrors = function() {
   return this;
 };
 
-
-Logger.prototype.debug = function(y, depth) {
-  var self = this;
-  self._vanilla['debug'](inspect(y, {colors: true, depth: depth}));
-};
-
 function logger() {
   var self = new Logger();
 
   // add error handling to log levels
   Object.keys(self._logger.levels).forEach(function(key) {
-    self._logger[key] = function(msg, meta) {
-      if (msg instanceof Error) {
-        return self._vanilla[key](msg.stack, meta || {});
-      }
-      return self._vanilla[key](msg, meta || {});
-    };
+    if (key !== 'GOOFY') {
+      self._logger[key] = function(msg, meta) {
+        if (msg instanceof Error) {
+          return self._vanilla[key](msg.stack, meta || {});
+        }
+        return self._vanilla[key](msg, meta || {});
+      };
+    }
   });
 
+  self._logger.GOOFY = function(y, depth) {
+    depth = depth || null;
+    self._vanilla['GOOFY'](new Error(inspect(y, {colors: true, depth: depth})).stack.replace(/^.*?:\s/, ''));
+  };
+
+  self._logger.fake = function() {
+    Object.keys(self._logger.levels).forEach(function(key) {
+      self._logger[key] = function(msg, meta){};
+    });
+    return self._logger;
+  };
+
   // add `setApp' and `set' to self._logger
-  [ /*'_vanilla',*/ '_parent', 'setApp', 'set' ].forEach(function(meth) {
+  [ '_vanilla', '_parent', 'setApp', 'set' ].forEach(function(meth) {
     self._logger[meth] = self[meth];
   });
   return self._logger;
