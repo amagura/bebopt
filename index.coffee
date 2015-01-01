@@ -1,2 +1,2 @@
-bebopt = require './src/bebopt.coffee'
+bebopt = require './lib/bebopt.coffee'
 module.exports = bebopt
