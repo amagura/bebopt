@@ -5,7 +5,7 @@ a more powerful, and coincidentally musical, option parser for node.js/coffeescr
 Because too many of the option parsers available for node.js suffer from being either too low-level but powerful, or too high-level but weak.  In node.js, at least, it seems that the smarter a program is, the less control it gives the end-user.
 
 ## The problem
-Take [optimist](https://github.com/substack/node-optimist) and [yargs](https://github.com/chevex/yargs) for example: both of them are great parsers in their own right, but they provide no method or abstraction for handling arguments _in the order in which they_ appear _on the command-line_.
+Take [optimist](https://github.com/substack/node-optimist) and [yargs](https://github.com/chevex/yargs), for example: both of them are great parsers in their own right, but they provide no method or abstraction for handling arguments _in the order in which they_ appear _on the command-line_.
 
 Instead, the way I've seen most people use both of these excellent parsers inherently makes their programs handle args in the order in which they are handled:
 
