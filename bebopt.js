@@ -1,16 +1,38 @@
-#!/usr/bin/env node
 'use strict';
+
 function Bebopt() {
   this.app = this.app || 'bebopt';
-  this._mode = this.app || 'bebopt';
   this._long = {};
   this._short = {};
   this._shortLong = {};
-  this._parent = null;
   return this;
 }
 
-(['long', 'short', 'shortLong']).map(function(fn) {
+Bebopt.prototype.describe = function(name, desc, fn) {
+  var self = this;
+  if (typeof(name) === 'array') {
+    self._shortLong[name[0]] = {
+      fn: fn,
+      desc: desc
+    };
+    if (name.length === 1)
+      self._shortLong[name[0]].type = 'flag';
+    else if (name[1] === '::')
+      self._shortLong[name[0]].type = 'optarg';
+    else if (name[1] === ':')
+      self._shortLong[name[0]].type = 'arg';
+    else
+      self._shortLong[name[0]].type = 'flag';
+  } else {
+    self._shortLong[name[0]] = {
+      fn: fn,
+      desc: desc,
+      type: 'flag'
+    };
+  }
+}
+              
+              (['long', 'short', 'shortLong']).map(function(fn) {
   return Bebopt.prototype[fn] = function(name, body, desc) {
     var self = this;
     if (typeof(body) == 'string') {
