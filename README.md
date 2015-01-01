@@ -29,7 +29,7 @@ if (args.h)
 
 Because `-v` is handled before `-h`, even if you run `node ex.js -h -v`, the version string will always get printed _instead of_ the expected usage information.
 
-## The solution
+***
 
 In optimist, the problem can _sort of_ be resolved by looping over the resulting `args` object using `Object.key` like so:
 
