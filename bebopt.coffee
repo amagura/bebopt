@@ -1,6 +1,6 @@
 'use strict'
 
-if 1
+if 1 # FIXME remove me
   log = require './log'
 else
   log = require './log'
