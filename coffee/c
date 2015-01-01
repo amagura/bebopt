@@ -1,9 +1,9 @@
 # vim:ft=coffee:
 bebopt = require './bebopt'
-args = bebopt
+args = new bebopt()
   .longBeat('help', () ->
     console.log('help')
     process.exit(0)
-  , 'print this message and exit').required()
+  , 'print this message and exit')
   .shortBeat('h', '#longBeat.help')
   .halfBeat('help', '#longBeat.help')

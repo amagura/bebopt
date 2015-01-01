@@ -8,11 +8,21 @@ class Bebopt
     @_shortLong ?= {}
 
   longBeat: (name, fn, desc) =>
-    if (name.length < 2) and (typeof(fn) isnt 'string')
-      err = "bebopt: long option name too short; not in reference -- `#{name}'"
+    if name.length < 2
+      err = "Bebopt: option name too short -- `#{name}'"
       throw new Error("#{err}")
+    return @
 
   shortBeat: (name, fn, desc) =>
+    if name.length > 1
+      err = "Bebopt: option name too long: `#{name}'"
+      throw new Error("#{err}")
+    return @
+
   halfBeat: (name, fn, desc) =>
+    if name.length < 2
+      err = "Bebopt: option name too short -- `#{name}'"
+      throw new Error("#{err}")
+    return @
 
 module.exports = Bebopt
