@@ -17,12 +17,6 @@ limitations under the License.
 ###
 'use strict'
 
-if 0 # FIXME remove me
-  log = require './log'
-else
-  log = require './log'
-  log = log.fake()
-
 class Bebopt
   constructor: (@app) ->
     @app ?= 'bebopt'
