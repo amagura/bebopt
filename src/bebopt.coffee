@@ -17,6 +17,8 @@ limitations under the License.
 ###
 'use strict'
 
+util = require 'util'
+
 class Bebopt
   constructor: (@app) ->
     @app ?= 'bebopt'
@@ -27,6 +29,7 @@ class Bebopt
     @__rargs = [] # raw args
     @__pargs = [] # processed args
     @__uargs = {} # user-ready args
+
 
   _refError: (ref) =>
     if typeof(ref) is 'string'
@@ -141,7 +144,7 @@ class Bebopt
     @_parent = null
     return @
 
-  parse: () =>
+  _gather: () =>
     @__rargs = process.argv
     @__pargs = @__rargs.slice(2).map((opt, ind, arr) =>
       len = opt.replace(/^(--?).*/, '$1').length
@@ -158,8 +161,11 @@ class Bebopt
           dRef = @_decodeRef("#longBeat.#{opt}")
       _ref = @_checkOption(dRef)
       _ref.name = dRef.child
-      return _ref
-    )
-    console.log(@)
+      return _ref)
+
+
+  parse: () =>
+    @_gather()
+    console.log(util.inspect(@, { colors: true, depth: null }))
 
 module.exports = Bebopt
