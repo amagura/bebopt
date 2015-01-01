@@ -1,5 +1,6 @@
 'use strict'
-util = require 'util'
+log = require './log'
+
 
 class Bebopt
   constructor: (@app) ->
@@ -8,6 +9,9 @@ class Bebopt
     @_short ?= {}
     @_shortLong ?= {}
     @_parent = null
+
+  _debug: (y) ->
+    console.log
 
   _refError: (ref) =>
     if typeof(fn) is 'string'
