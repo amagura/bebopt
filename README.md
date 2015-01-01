@@ -52,5 +52,5 @@ Object.keys(args).slice(2).forEach(function(key) {
 ```
 I say _sort of_ because the above solution doesn't capture [commands](https://github.com/substack/node-optimist#and-non-hypenated-options-too-just-use-argv_).
 
-That's great and all, but optimist is deprecated... ok, and?
+That's great and all, but optimist is [deprecated](https://github.com/substack/node-optimist#deprecation-notice)... ok, and?
 The solution _doesn't work_ for yargs!
