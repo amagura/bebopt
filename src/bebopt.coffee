@@ -1,7 +1,7 @@
 ###
 Copyright 2015 Alexej Magura
 
-This file is part of Bebopt https://github.com/amagura/bebopt
+This file is part of Bebopt (https://github.com/amagura/bebopt)
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
