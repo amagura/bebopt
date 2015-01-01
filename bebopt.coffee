@@ -1,3 +1,18 @@
+#  Copyright 2015 Alexej Magura
+#
+#  This file is part of Bebopt
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
 'use strict'
 
 if 0 # FIXME remove me
@@ -50,7 +65,7 @@ class Bebopt
   longBeat: (name, fn, desc) =>
     @_beatError('long', name)
     _ref = @_refError(fn)
-    
+
     if _ref is false
       @_long[name] =
         fn: fn,
@@ -64,7 +79,7 @@ class Bebopt
   shortBeat: (name, fn, desc) =>
     @_beatError('short', name)
     _ref = @_refError(fn)
-    
+
     if _ref is false
       @_short[name] =
         fn: fn,
@@ -78,7 +93,7 @@ class Bebopt
   halfBeat: (name, fn, desc) =>
     @_beatError('long', name)
     _ref = @_refError(fn)
-    
+
     if _ref is false
       @_half[name] =
         fn: fn,
@@ -100,7 +115,7 @@ class Bebopt
         parent: "_#{_refns}"
         child: _refchild
       return _ref
-    
+
   _checkOption: (decRef) =># decRef -> decoded ref
     ref = @[decRef.parent][decRef.child]
     if ref is undefined
