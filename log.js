@@ -13,7 +13,6 @@ function Logger() {
     , idx = 0;
   [
     [ 'GOOFY', 'zebra blackBG white inverse'],
-    [ 'status', 'light blue zebra' ],
     [ 'silly', 'rainbow' ], // level-name, level-color
     [ 'verbose', 'magenta' ],
     [ 'debug', 'yellow' ],
