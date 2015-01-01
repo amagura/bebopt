@@ -1,6 +1,10 @@
 'use strict'
-log = require './log'
 
+if 1
+  log = require './log'
+else
+  log = require './log'
+  log = log.fake()
 
 class Bebopt
   constructor: (@app) ->
@@ -10,20 +14,17 @@ class Bebopt
     @_shortLong ?= {}
     @_parent = null
 
-  _debug: (y) ->
-    console.log
-
   _refError: (ref) =>
-    if typeof(fn) is 'string'
+    if typeof(ref) is 'string'
       if ref[0] isnt '#'
         err = "Bebopt: ref must begin with pound: `#{ref}'"
         throw new Error(err)
       _refns = ref.replace(/^#(.*)Beat\..*/, '$1')
       _refchild = ref.replace(/^#.*Beat\.(.*)/, '$1')
       _ref = @["_#{_refns}"][_refchild]
-      console.log(util.inspect(_ref, {colors: true, depth: null}))
-      console.log(_refns)
-      console.log(_refchild)
+      log.GOOFY(_ref)
+      log.GOOFY(_refns)
+      log.GOOFY(_refchild)
       if _ref is undefined
         err = "Bebopt: bad reference: #{_ref}: `#{ref}'"
         throw new Error(err)
