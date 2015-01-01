@@ -26,9 +26,9 @@ else
 class Bebopt
   constructor: (@app) ->
     @app ?= 'bebopt'
-    @_long ?= {}
-    @_short ?= {}
-    @_half ?= {}
+    @_long = {}
+    @_short = {}
+    @_half = {}
     @_parent = null
     @__rargs = [] # raw args
     @__pargs = [] # processed args
