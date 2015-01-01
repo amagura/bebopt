@@ -13,7 +13,8 @@ class Bebopt
     @_short ?= {}
     @_half ?= {}
     @_parent = null
-    @__args = []
+    @__rargs = [] # raw args
+    @__pargs = {} # processed args
 
   _refError: (ref) =>
     if typeof(ref) is 'string'
@@ -27,6 +28,7 @@ class Bebopt
         err = "Bebopt: bad reference: #{_ref}: `#{ref}'"
         throw new Error(err)
       else
+        _ref._isref = true
         return _ref
     else
       return false
@@ -50,6 +52,7 @@ class Bebopt
     
     if _ref is false
       @_long[name] =
+        name: name,
         fn: fn,
         desc: desc,
         type: 'flag'
@@ -64,6 +67,7 @@ class Bebopt
     
     if _ref is false
       @_short[name] =
+        name: name,
         fn: fn,
         desc: desc,
         type: 'flag'
@@ -78,6 +82,7 @@ class Bebopt
     
     if _ref is false
       @_half[name] =
+        name: name,
         fn: fn,
         desc: desc,
         type: 'flag'
@@ -118,12 +123,21 @@ class Bebopt
     return @
 
   parse: () =>
-    @__args = process.argv
-    @__args.slice(2).forEach((opt, ind, arr) ->
+    @__rargs = process.argv
+    @__rargs.slice(2).forEach((opt, ind, arr) =>
       len = opt.replace(/^(--?).*/, '$1').length
-      opt = opt.replace(/^-/, '')
+      switch len
+        when 1
+          opt = opt.replace(/^-/, '')
+          if opt.length < 2
+            ref = @_refError("#shortBeat.#{opt}")
+            @__pargs +=
 
-      console.log opt
+
+
+            console.log(ref)
+        when 2
+          opt = opt.replace(/^--/, '')
     )
 
     console.log(@)
