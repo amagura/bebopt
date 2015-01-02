@@ -26,9 +26,8 @@ class Bebopt
     @_short = {}
     @_half = {}
     @_parent = null
-    @__rargs = [] # raw args
-    @__pargs = [] # processed args
-    @__uargs = {} # user-ready args
+    @__options = []
+    @_raw = process.argv # XXX for the people; lol, that is this is a protected copy
 
   _beatError: (parent, name) ->
     switch parent
@@ -102,30 +101,103 @@ class Bebopt
     @_parent = null
     return @
 
-  _gather: () =>
-    @__rargs = process.argv
-    @__pargs = @__rargs.slice(2).map((opt, ind, arr) =>
-      if /^--$/.test(opt)
-        len = opt.replace(/^(--?).*/, '$1').length
-        parent = null
-        switch len
-          when 1
-            opt = opt.replace(/^-/, '')
-            if opt.length < 2 # short
-              ref = @_short[opt]
-              parent = 'short'
-            else
-              ref = @_half[opt]
-              parent = 'half'
-          when 2
-            opt = opt.replace(/^--/, '')
-            ref = @_long[opt]
-            parent = 'long'
-        console.log opt
-        @_optError(parent, opt)
-      else
+  _sepOptArg: (opt) ->
+    if ///=///.test(opt)
+      arg = opt.replace(/.*?=(.*)/, '$1')
+    else
+      arg = undefined
+    _opt = opt.replace(/(.*)?=.*/, '$1')
+    return {
+      opt: _opt,
+      _arg: arg
+    }
 
-      return ref)
+# processes `process.arv' producing two arrays, one containing options,
+# their indexes and any arguments passed in the `--OPTION=ARG' fashion,
+# and then another containing non-option arguments
+  _gather: () =>
+    @_opts = []
+    @_args = []
+    optend = false
+    process.argv.slice(2).forEach((arg, ind, arr) =>
+      if /^--$/.test(arg)
+        optend = true
+      else
+        # if optend or no dashes are found in the arg,
+        # then we have an non-option argument
+        if optend or /^[^-]+/.test(arg) is true
+          @_args.push({
+            arg: arg,
+            index: ind})
+        else # else, we are working with an option
+          { opt, _arg } = @_sepOptArg(arg)
+          @_opts.push({
+            arg: opt,
+            optarg: _arg,
+            index: ind }))
+
+# validates the incoming command-line options
+# e.g. if an option that takes a required arg
+# has no arg, then it causes bebopt to exit
+# non-zero and prints an error message.
+  _optTypeError: (optName, optArg, nofDashes) =>
+    [
+      {
+        dashes: 1,
+        name: '_short',
+        minOptLen: 1
+      },
+      {
+        dashes: 2,
+        name: '_long',
+        minOptLen: 2
+      },
+      {
+        dashes: 1,
+        name: '_half',
+        minOptLen: 2
+      },
+      # `list' refers to the fact that `_long', `_short', and `_half' are
+      # the objects where the defined options are stored
+    ].forEach((list) =>
+      if nofDashes is list.dashes
+        type = @[list.name][optName].type
+        switch type
+          when 'optarg'
+            if optArg isnt undefined
+              @[list.name][optName].arg = optArg
+
+
+      when 1
+        switch @_short
+
+  _resolveOpts: () =>
+    @_opts.forEach((elem, ind) =>
+      len = elem.arg.replace(/^(--?).*/, '$1').length
+      elem.arg = elem.arg.replace(/^--?(.*)/, '$1')
+      console.log elem.arg
+      switch len
+        when 1
+          @_short(elem.arg)
+    )
+        #parent = null
+        #switch len
+          #when 1
+            #opt = opt.replace(/^-/, '')
+            #if opt.length < 2 # short
+              #ref = @_short[opt]
+              #parent = 'short'
+            #else
+              #ref = @_half[opt]
+              #parent = 'half'
+          #when 2
+            #opt = opt.replace(/^--/, '')
+            #ref = @_long[opt]
+            #parent = 'long'
+        #console.log opt
+        #@_optError(parent, opt)
+      #else
+        #return ref)
 
   _log: (y) ->
     console.log(util.inspect(y, { colors: true, depth: null }))
@@ -133,5 +205,6 @@ class Bebopt
   parse: () =>
     @_gather()
     @_log(@)
+    @_resolveOpts()
 
 module.exports = Bebopt
