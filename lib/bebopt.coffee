@@ -60,42 +60,39 @@ class Bebopt
           throw new Error(err)
         return false
 
-  longBeat: (name, fn, desc) =>
+  longBeat: (name, fn) =>
     @_beatError('long', name)
     _ref = @_refError(fn)
 
     if _ref is false
       @_long[name] =
         fn: fn,
-        desc: desc,
         type: 'flag'
     else
       @_long[name] = _ref
     @_parent = "#longBeat.#{name}"
     return @
 
-  shortBeat: (name, fn, desc) =>
+  shortBeat: (name, fn) =>
     @_beatError('short', name)
     _ref = @_refError(fn)
 
     if _ref is false
       @_short[name] =
         fn: fn,
-        desc: desc,
         type: 'flag'
       @_parent = "#shortBeat.#{name}"
     else
       @_short[name] = _ref
     return @
 
-  halfBeat: (name, fn, desc) =>
+  halfBeat: (name, fn) =>
     @_beatError('long', name)
     _ref = @_refError(fn)
 
     if _ref is false
       @_half[name] =
         fn: fn,
-        desc: desc,
         type: 'flag'
       @_parent = "#shortBeat.#{name}"
     else
@@ -126,6 +123,20 @@ class Bebopt
         process.exit(1)
     else
       return ref
+
+  _parentError: () =>
+    if @_parent is null
+      err = 'Bebopt: null parent ref: cannot apply'
+      throw new Error(err)
+
+  help: (msg, isHelp) =>
+    @_parentError()
+    ref = @_decodeRef(@_parent)
+    if typeof msg is 'boolean'
+      @[ref.parent][ref.child].desc = ''
+      @
+
+
 
   op: (code, help) =>
     if @_parent is null
