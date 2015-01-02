@@ -103,5 +103,9 @@
     },
     "space_operators": {
         "level": "warn"
+    },
+    "consecutive_newlines": {
+        "level": "warn"
+    }
     }
 }
