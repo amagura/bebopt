@@ -1,7 +1,7 @@
 'use strict'
-equal = require('deep-equal')
+equal = require 'deep-equal'
 
-deepEqual(queue...) ->
+deepEqual = (queue...) ->
   return queue.reduce((a, b) ->
     Object.keys(a).forEach((key) ->
       if a[key] instanceof Function

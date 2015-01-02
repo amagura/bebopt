@@ -6,8 +6,7 @@ coffee := ${rootdir}/node_modules/coffee-script/bin/coffee
 coffeelint := ${rootdir}/node_modules/coffeelint/bin/coffeelint
 uglify := ${rootdir}/node_modules/uglify-js/bin/uglifyjs
 
-SRC = ${rootdir}/index.coffee ${rootdir}/lib/bebopt.coffee
-
+SRC = ${rootdir}/index.coffee ${rootdir}/lib/bebopt.coffee ${rootdir}/lib/equal.coffee
 
 all: lint build ugly
 

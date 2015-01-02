@@ -17,7 +17,8 @@ limitations under the License.
 ###
 'use strict'
 
-util = require 'util'
+util      = require 'util'
+deepEqual = require('./equal')
 
 class Bebopt
   constructor: (@app) ->
@@ -27,7 +28,8 @@ class Bebopt
     @_half = {}
     @_parent = null
     @__options = []
-    @_raw = process.argv # XXX for the people; lol, that is this is a protected copy
+    # XXX for the people; lol, that is this is a protected copy of `argv'
+    @_raw = process.argv
 
   _beatError: (parent, name) ->
     switch parent
@@ -200,44 +202,26 @@ class Bebopt
   # that arg is added to the option's object
   # within the respective
   # option list, such as `@_long'
-  _catchSpaceDelimArgs: (optInfo, optLen, nofDashes) =>
-    #XXX optInfo is `{ name: optName, index: index, arg: optarg }'
-    [
-      {
-        name: '_short',
-        minOptLen: 1,
-        dashes: 1
-      },
-      {
-        name: '_half',
-        minOptLen: 2,
-        dashes: 1
-      },
-      {
-        name: '_long',
-        minOptLen: 2,
-        dashes: 2
-      }
-    ].forEach((list) =>
-      if nofDashes is list.dashes and optLen is list.minOptLen
-        switch @[list.name][optInfo.name].type
-          when 'flag'
-          else
-            if optInfo.arg is undefined
-              @[list.name][optInfo.name].optarg = @_args
-                .filter((nonOpt) ->
-                  if nonOpt.index is optInfo.index
-                    return nonOpt.arg))
-
+  _catchSpaceDelimArgs: (opt, list) =>
+    if list[opt.arg].type isnt 'flag'
+      if opt.optarg is undefined
+        @_args.forEach((nonOpt, ind) =>
+          if nonOpt.index is (opt.index + 1)
+            opt.optarg = nonOpt.arg
+            delete @_args[ind])
+        return opt
 
   _resolveOpts: () =>
     @_opts.forEach((elem, ind) =>
-      len = elem.arg.replace(/^(--?).*/, '$1').length
+      dashes = elem.arg.replace(/^(--?).*/, '$1').length # number of dashes
       elem.arg = elem.arg.replace(/^--?(.*)/, '$1')
-      console.log elem.arg
-      switch len
-        when 1
-          @_short(elem.arg)
+      if dashes is 1 and elem.arg.length < 2 # short
+        elem = @_catchSpaceDelimArgs(elem, @_short)
+      else if dashes is 1 and elem.arg.length > 1 # half
+        elem = @_catchSpaceDelimArgs(elem, @_half)
+      else if dashes is 2 and elem.arg.length > 1 # long
+        elem = @_catchSpaceDelimArgs(elem, @_long)
+
     )
 
   _log: (y) ->
@@ -245,7 +229,7 @@ class Bebopt
 
   parse: () =>
     @_gather()
-    @_log(@)
     @_resolveOpts()
+    @_log(@)
 
 module.exports = Bebopt
