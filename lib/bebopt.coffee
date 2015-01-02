@@ -81,12 +81,13 @@ class Bebopt
       self._parent = self["_#{listName}"][name]
       return self))
 
-  _optError: (parent, child) ->
+  _optError: (parent, child) =>
+    if @["_#{parent}"][child] is undefined
       if child.length < 2
         console.error("#{@app}: invalid option -- '#{child}'")
         process.exit(1)
       else if child.length > 1
-        dash = if opt.parent is '_half' then '-' else '--'
+        dash = if parent is 'half' then '-' else '--'
         console.error("#{@app}: unrecognized option '#{dash}#{child}'")
         process.exit(1)
 
@@ -99,43 +100,38 @@ class Bebopt
     @_parentError()
     @_parent.usage = text
     @_parent = null
-    @_log(@)
     return @
 
   _gather: () =>
     @__rargs = process.argv
     @__pargs = @__rargs.slice(2).map((opt, ind, arr) =>
-      len = opt.replace(/^(--?).*/, '$1').length
-      dRef = {}
-      switch len
-        when 1
-          opt = opt.replace(/^-/, '')
-          if opt.length < 2 # short
-            ref = @_short[opt]
-            console.log ref
-            @_checkOption({
-              parent: 'short',
-              ref: ref
-            }, opt)
-          else
-            ref = @_half[opt]
-            @_checkOption({
-              parent: 'half',
-              ref: ref
-            }, opt)
-        when 2
-          opt = opt.replace(/^--/, '')
-          ref = @_long[opt]
-          @_checkOption({
-            parent: 'long'
-      _ref = @_checkOption(dRef)
-      _ref.name = dRef.child
-      return _ref)
+      if /^--$/.test(opt)
+        len = opt.replace(/^(--?).*/, '$1').length
+        parent = null
+        switch len
+          when 1
+            opt = opt.replace(/^-/, '')
+            if opt.length < 2 # short
+              ref = @_short[opt]
+              parent = 'short'
+            else
+              ref = @_half[opt]
+              parent = 'half'
+          when 2
+            opt = opt.replace(/^--/, '')
+            ref = @_long[opt]
+            parent = 'long'
+        console.log opt
+        @_optError(parent, opt)
+      else
+        
+      return ref)
 
   _log: (y) ->
     console.log(util.inspect(y, { colors: true, depth: null }))
 
   parse: () =>
     @_gather()
+    @_log(@)
 
 module.exports = Bebopt
