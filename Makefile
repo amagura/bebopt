@@ -19,4 +19,4 @@ deps:
 lint: deps coffeelint
 
 coffeelint:
-	$(foreach f,$(SRC),${coffeelint} -f ${rootdir}/coffeelint.json --rules rule.coffee $(f);)
+	$(foreach f,$(SRC),${coffeelint} -f ${rootdir}/coffeelint.json --rules lint/* $(f);)
