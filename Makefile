@@ -22,12 +22,13 @@ lint: deps coffeelint
 	touch lint
 
 coffeelint:
-	$(foreach f,$(SRC),${coffeelint} -f ${rootdir}/coffeelint.json --rules lint/* $(f);)
+	$(foreach f,$(SRC),${coffeelint} -f ${rootdir}/coffeelint.json --rules _lint/* $(f);)
 
 ugly:
-	$(foreach f,$(SRC:.coffee=.js),${uglify} --overwrite $(f);)
+	$(foreach f,$(SRC:.coffee=.js),${uglify} $(f) > $(f:.js=.min.js);)
 
 clean:
 	$(foreach f,$(SRC:.coffee=.js),$(RM) $(f);)
+	$(foreach f,$(SRC:.coffee=.min.js),$(RM) $(f);)
 	$(RM) lint
 	$(RM) build
