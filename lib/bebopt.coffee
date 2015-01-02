@@ -81,17 +81,14 @@ class Bebopt
       self._parent = self["_#{listName}"][name]
       return self))
 
-  _checkOption: (parent, child) =>
-    if @["_#{parent}"][child] is undefined
+  _optError: (parent, child) ->
       if child.length < 2
         console.error("#{@app}: invalid option -- '#{child}'")
         process.exit(1)
       else if child.length > 1
-        dash = if parent is '_half' then '-' else '--'
+        dash = if opt.parent is '_half' then '-' else '--'
         console.error("#{@app}: unrecognized option '#{dash}#{child}'")
         process.exit(1)
-    else
-      return @["_#{parent}"][child]
 
   _parentError: () =>
     if @_parent is null
@@ -115,11 +112,22 @@ class Bebopt
           opt = opt.replace(/^-/, '')
           if opt.length < 2 # short
             ref = @_short[opt]
+            console.log ref
+            @_checkOption({
+              parent: 'short',
+              ref: ref
+            }, opt)
           else
             ref = @_half[opt]
+            @_checkOption({
+              parent: 'half',
+              ref: ref
+            }, opt)
         when 2
           opt = opt.replace(/^--/, '')
           ref = @_long[opt]
+          @_checkOption({
+            parent: 'long'
       _ref = @_checkOption(dRef)
       _ref.name = dRef.child
       return _ref)
