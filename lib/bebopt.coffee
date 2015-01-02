@@ -60,43 +60,46 @@ class Bebopt
           throw new Error(err)
         return false
 
-  longBeat: (name, fn) =>
+  longBeat: (_name, fn) =>
+    { op, name } = @_makeOpt(_name)
     @_beatError('long', name)
-    _ref = @_refError(fn)
 
-    if _ref is false
+    if fn is undefined
+      @_long[name] = @_parent
+    else
       @_long[name] =
-        fn: fn,
-        type: 'flag'
-    else
-      @_long[name] = _ref
-    @_parent = "#longBeat.#{name}"
+        cb: fn
+    @_parent = @_long[name]
     return @
 
-  shortBeat: (name, fn) =>
+  _makeOpt: (name) ->
+    return {
+      op: name.replace(/^.*([:]*)$/, '$1'),
+      name: name.replace(/^(.*)[:]*$/, '$1')
+    }
+
+  shortBeat: (_name, fn) =>
+    { op, name } = @_makeOpt(_name)
     @_beatError('short', name)
-    _ref = @_refError(fn)
 
-    if _ref is false
-      @_short[name] =
-        fn: fn,
-        type: 'flag'
-      @_parent = "#shortBeat.#{name}"
+    if fn is undefined
+      @_short[name] = @_parent
     else
-      @_short[name] = _ref
+      @_short[name] =
+        cb: fn
+    @_parent = @_short[name]
     return @
 
-  halfBeat: (name, fn) =>
+  halfBeat: (_name, fn) =>
+    { op, name } = @_makeOpt(_name)
     @_beatError('long', name)
-    _ref = @_refError(fn)
 
-    if _ref is false
-      @_half[name] =
-        fn: fn,
-        type: 'flag'
-      @_parent = "#shortBeat.#{name}"
+    if fn is undefined
+      @_short[name] = @_parent
     else
-      @_half[name] = _ref
+      @_short[name] =
+        cb: fn
+    @_parent = @_short[name]
     return @
 
   _decodeRef: (ref) ->
@@ -111,32 +114,25 @@ class Bebopt
         child: _refchild
       return _ref
 
-  _checkOption: (decRef) =># decRef -> decoded ref
-    ref = @[decRef.parent][decRef.child]
-    if ref is undefined
-      if decRef.child.length < 2
-        console.error("#{@app}: invalid option -- '#{decRef.child}'")
+  _checkOption: (parent, child) =>
+    if @["_#{parent}"][child] is undefined
+      if child.length < 2
+        console.error("#{@app}: invalid option -- '#{child}'")
         process.exit(1)
-      else if decRef.child.length > 1
-        dash = if decRef.parent is '_half' then '-' else '--'
-        console.error("#{@app}: unrecognized option '#{dash}#{decRef.child}'")
+      else if child.length > 1
+        dash = if parent is '_half' then '-' else '--'
+        console.error("#{@app}: unrecognized option '#{dash}#{child}'")
         process.exit(1)
     else
-      return ref
+      return @["_#{parent}"][child]
 
   _parentError: () =>
     if @_parent is null
       err = 'Bebopt: null parent ref: cannot apply'
       throw new Error(err)
 
-  help: (msg, isHelp) =>
+  help: (text) =>
     @_parentError()
-    ref = @_decodeRef(@_parent)
-    if typeof msg is 'boolean'
-      @[ref.parent][ref.child].desc = ''
-      @
-
-
 
   op: (code, help) =>
     if @_parent is null
@@ -162,12 +158,12 @@ class Bebopt
         when 1
           opt = opt.replace(/^-/, '')
           if opt.length < 2 # short
-            dRef = @_decodeRef("#shortBeat.#{opt}")
+            ref = @_short[opt]
           else
-            dRef = @_decodeRef("#halfBeat.#{opt}")
+            ref = @_half[opt]
         when 2
           opt = opt.replace(/^--/, '')
-          dRef = @_decodeRef("#longBeat.#{opt}")
+          ref = @_long[opt]
       _ref = @_checkOption(dRef)
       _ref.name = dRef.child
       return _ref)
