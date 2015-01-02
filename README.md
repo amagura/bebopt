@@ -1,4 +1,4 @@
-# Bebopt
+# Bebopt [![Build Status](https://travis-ci.org/amagura/bebopt.svg?branch=master)](https://travis-ci.org/amagura/bebopt)
 a more powerful, and coincidentally musical, option parser for node.js/coffeescript
 
 # Why another option parser?
