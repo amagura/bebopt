@@ -95,11 +95,11 @@ class Bebopt
     @_beatError('long', name)
 
     if fn is undefined
-      @_short[name] = @_parent
+      @_half[name] = @_parent
     else
-      @_short[name] =
+      @_half[name] =
         cb: fn
-    @_parent = @_short[name]
+    @_parent = @_half[name]
     return @
 
   _decodeRef: (ref) ->
@@ -133,6 +133,10 @@ class Bebopt
 
   help: (text) =>
     @_parentError()
+    @_parent.usage = text
+    @_parent = null
+    console.log(@)
+    return @
 
   op: (code, help) =>
     if @_parent is null
