@@ -25,7 +25,7 @@ coffeelint:
 	$(foreach f,$(SRC),${coffeelint} -f ${rootdir}/coffeelint.json --rules lint/* $(f);)
 
 ugly:
-	$(foreach f,$(SRC:.coffee=.js),${uglify} $(f);)
+	$(foreach f,$(SRC:.coffee=.js),${uglify} --overwrite $(f);)
 
 clean:
 	$(foreach f,$(SRC:.coffee=.js),$(RM) $(f);)
