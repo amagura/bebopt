@@ -141,6 +141,10 @@ class Bebopt
 # has no arg, then it causes bebopt to exit
 # non-zero and prints an error message.
   _optTypeError: (optName, optArg, nofDashes) =>
+    # XXX this function MUST be called after we've already
+    # taken the optargs passed in the `--OPTION ARG' fashion
+    # and smooshed them in their respective
+    # arg objects.
     [
       {
         dashes: 1,
@@ -164,12 +168,28 @@ class Bebopt
         type = @[list.name][optName].type
         switch type
           when 'optarg'
-            if optArg isnt undefined
+            @[list.name][optName].arg = optArg
+          when 'arg'
+            if optArg is undefined
+              err = "#{@app}: "
+              if name is '_short'
+                err += "option requires an argument -- '#{optName}'"
+              else
+                dashes = if name is '_half' then '-' else '--'
+                err += "option '#{dashes}#{optName}' requires an argument"
+              console.error(err)
+              process.exit(1)
+            else
               @[list.name][optName].arg = optArg
-
-
-      when 1
-        switch @_short
+          when 'flag'
+            if optArg isnt undefined
+              err = "#{@app}"
+              dashes = if name is '_half' then '-' else '--'
+              err += "option '#{dashes}#{optName}' doesn't allow an argument"
+              console.error(err)
+              process.exit(1)
+            else
+              @[list.name][optName].arg = true)
 
   _resolveOpts: () =>
     @_opts.forEach((elem, ind) =>
@@ -180,24 +200,6 @@ class Bebopt
         when 1
           @_short(elem.arg)
     )
-        #parent = null
-        #switch len
-          #when 1
-            #opt = opt.replace(/^-/, '')
-            #if opt.length < 2 # short
-              #ref = @_short[opt]
-              #parent = 'short'
-            #else
-              #ref = @_half[opt]
-              #parent = 'half'
-          #when 2
-            #opt = opt.replace(/^--/, '')
-            #ref = @_long[opt]
-            #parent = 'long'
-        #console.log opt
-        #@_optError(parent, opt)
-      #else
-        #return ref)
 
   _log: (y) ->
     console.log(util.inspect(y, { colors: true, depth: null }))
