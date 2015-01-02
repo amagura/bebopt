@@ -50,4 +50,4 @@ Object.keys(args).slice(2).forEach(function(key) {
   /* process args using a switch */
 });
 ```
-I say _sort of_ because the above solution doesn't capture [commands](https://github.com/substack/node-optimist#and-non-hypenated-options-too-just-use-argv_), is ugly, and _doesn't work_ with yargs!!
+I say _sort of_ because the above solution doesn't capture [commands](https://github.com/substack/node-optimist#and-non-hypenated-options-too-just-use-argv_), is ugly, and _doesn't_ work with yargs!!
