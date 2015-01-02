@@ -9,7 +9,7 @@ uglify := ${rootdir}/node_modules/uglifyjs/bin/uglifyjs
 SRC = ${rootdir}/index.coffee ${rootdir}/lib/bebopt.coffee
 
 
-all: lint build uglify
+all: lint build ugly
 
 build:
 	$(foreach f,$(SRC),${coffee} -c $(f);)
