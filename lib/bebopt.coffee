@@ -57,7 +57,7 @@ class Bebopt
       name: name
     }
 
-  # black magic
+  # a bit of black magic ;)
   `function _makeFun(context, name, cb) {
     context.prototype[name] = cb;
     return context;
@@ -66,7 +66,7 @@ class Bebopt
   [ 'shortBeat', 'longBeat', 'halfBeat' ].forEach((funcName) =>
     listName = funcName.replace(/Beat/, '')
     return _makeFun(@, funcName, (_name, fn) ->
-      # namespace err.. context injection
+      # namespace err.. context injection ;)
       self = @
       { op, name } = self._makeOpt(_name)
       self._beatError(listName, name)
