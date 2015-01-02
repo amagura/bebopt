@@ -7,6 +7,7 @@
   "devDependencies": {
     "coffee-script": "~1.8.0",
     "coffeelint": "~1.8.1",
+    "deep-equal": "~0.2.1",
     "uglify-js": "~2.4.16"
   },
   "scripts": {
