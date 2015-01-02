@@ -6,6 +6,5 @@ install:
   - npm install
 before_script:
   - make lint
-  - coffee example.js --help -h
 script:
   - make
