@@ -24,7 +24,7 @@ lint: deps coffeelint
 coffeelint:
 	$(foreach f,$(SRC),${coffeelint} -f ${rootdir}/coffeelint.json --rules _lint/* $(f);)
 
-ugly:
+ugly: build
 	$(foreach f,$(SRC:.coffee=.js),${uglify} $(f) > $(f:.js=.min.js);)
 
 clean:
