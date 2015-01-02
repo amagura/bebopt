@@ -124,7 +124,7 @@ class Bebopt
         console.log opt
         @_optError(parent, opt)
       else
-        
+
       return ref)
 
   _log: (y) ->
