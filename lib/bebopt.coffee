@@ -30,23 +30,6 @@ class Bebopt
     @__pargs = [] # processed args
     @__uargs = {} # user-ready args
 
-  _refError: (ref) =>
-    if typeof(ref) is 'string'
-      if ref[0] isnt '#'
-        err = "Bebopt: ref must begin with pound: '#{ref}'"
-        throw new Error(err)
-      _refns = ref.replace(/^#(.*)Beat\..*/, '$1')
-      _refchild = ref.replace(/^#.*Beat\.(.*)/, '$1')
-      _ref = @["_#{_refns}"][_refchild]
-      if _ref is undefined
-        err = "Bebopt: bad reference: #{_ref}: '#{ref}'"
-        throw new Error(err)
-      else
-        _ref._isref = true
-        return _ref
-    else
-      return false
-
   _beatError: (parent, name) ->
     switch parent
       when 'long'
@@ -60,59 +43,41 @@ class Bebopt
           throw new Error(err)
         return false
 
-  longBeat: (_name, fn) =>
-    { op, name } = @_makeOpt(_name)
-    @_beatError('long', name)
-
-    if fn is undefined
-      @_long[name] = @_parent
-    else
-      @_long[name] =
-        cb: fn
-    @_parent = @_long[name]
-    return @
-
   _makeOpt: (name) ->
+    _op = name.replace(/^.*?([:]*)$/, '$1')
+    name = name.replace(/^(.*?)[:]*$/, '$1')
+    if _op is '::'
+      op = 'optarg'
+    else if op is ':'
+      op = 'arg'
+    else
+      op = 'flag'
     return {
-      op: name.replace(/^.*([:]*)$/, '$1'),
-      name: name.replace(/^(.*)[:]*$/, '$1')
+      op: op,
+      name: name
     }
 
-  shortBeat: (_name, fn) =>
-    { op, name } = @_makeOpt(_name)
-    @_beatError('short', name)
+  `function _makeFun(context, name, cb) {
+    context.prototype[name] = cb;
+    return context;
+  }`
 
-    if fn is undefined
-      @_short[name] = @_parent
-    else
-      @_short[name] =
-        cb: fn
-    @_parent = @_short[name]
-    return @
+  [ 'shortBeat', 'longBeat', 'halfBeat' ].forEach((funcName) =>
+    listName = funcName.replace(/Beat/, '')
+    return _makeFun(@, funcName, (_name, fn) ->
+      self = @
+      { op, name } = self._makeOpt(_name)
+      self._beatError(listName, name)
 
-  halfBeat: (_name, fn) =>
-    { op, name } = @_makeOpt(_name)
-    @_beatError('long', name)
-
-    if fn is undefined
-      @_half[name] = @_parent
-    else
-      @_half[name] =
-        cb: fn
-    @_parent = @_half[name]
-    return @
-
-  _decodeRef: (ref) ->
-    if typeof(ref) is 'string'
-      if ref[0] isnt '#'
-        err = "Bebopt: ref must begin with pound: '#{ref}'"
-        throw new Error(err)
-      _refns = ref.replace(/^#(.*)Beat\..*/, '$1')
-      _refchild = ref.replace(/^#.*Beat\.(.*)/, '$1')
-      _ref =
-        parent: "_#{_refns}"
-        child: _refchild
-      return _ref
+      if fn is undefined
+        self._parent.type ?= op
+        self["_#{listName}"][name] = self._parent
+      else
+        self["_#{listName}"][name] =
+          cb: fn
+          type: op
+      self._parent = self["_#{listName}"][name]
+      return self))
 
   _checkOption: (parent, child) =>
     if @["_#{parent}"][child] is undefined
@@ -135,22 +100,7 @@ class Bebopt
     @_parentError()
     @_parent.usage = text
     @_parent = null
-    console.log(@)
-    return @
-
-  op: (code, help) =>
-    if @_parent is null
-      err = "Bebopt: null parent ref: cannot apply opcode: '#{code}'"
-      throw new Error(err)
-    ref = @_decodeRef(@_parent)
-    switch code
-      when '::'
-        @[ref.parent][ref.child].type = 'optarg'
-      when ':'
-        @[ref.parent][ref.child].type = 'arg'
-    if help isnt undefined and help isnt null
-      @[ref.parent][ref.child].help = true
-    @_parent = null
+    @_log(@)
     return @
 
   _gather: () =>
@@ -172,8 +122,10 @@ class Bebopt
       _ref.name = dRef.child
       return _ref)
 
+  _log: (y) ->
+    console.log(util.inspect(y, { colors: true, depth: null }))
+
   parse: () =>
     @_gather()
-    console.log(util.inspect(@, { colors: true, depth: null }))
 
 module.exports = Bebopt
