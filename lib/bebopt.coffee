@@ -18,14 +18,14 @@ limitations under the License.
 'use strict'
 
 util      = require 'util'
-deepEqual = require('./equal')
+deepEqual = require './equal'
+clone     = require 'clone'
 
 class Bebopt
   constructor: (@app) ->
     @app ?= 'bebopt'
     @_long = {}
     @_short = {}
-    @_half = {}
     @_parent = null
     @__options = []
     # XXX for the people; lol, that is this is a protected copy of `argv'
@@ -64,7 +64,7 @@ class Bebopt
     return context;
   }`
 
-  [ 'shortBeat', 'longBeat', 'halfBeat' ].forEach((funcName) =>
+  [ 'shortBeat', 'longBeat' ].forEach((funcName) =>
     listName = funcName.replace(/Beat/, '')
     return _makeFun(@, funcName, (_name, fn) ->
       # namespace err.. context injection ;)
@@ -90,8 +90,7 @@ class Bebopt
         console.error("#{@app}: invalid option -- '#{child}'")
         process.exit(1)
       else if child.length > 1
-        dash = if parent is 'half' then '-' else '--'
-        console.error("#{@app}: unrecognized option '#{dash}#{child}'")
+        console.error("#{@app}: unrecognized option '--#{child}'")
         process.exit(1)
 
   _parentError: () =>
@@ -123,10 +122,15 @@ class Bebopt
     @_opts = []
     @_args = []
     optend = false
+    noopt = false
     process.argv.slice(2).forEach((arg, ind, arr) =>
       if /^--$/.test(arg)
         optend = true
+      else if /^-$/.test(arg)
+        noopt = true
       else
+        if noopt
+          null # do nothing
         # if optend or no dashes are found in the arg,
         # then we have an non-option argument
         if optend or /^[^-]+/.test(arg) is true
@@ -150,10 +154,8 @@ class Bebopt
     # and smooshed them in their respective @_{short,long,half} list
     # objects.
     list = null
-    if dashes is 1 and opt.arg.length < 2
+    if dashes is 1
       list = [ @_short, 'short' ]
-    else if dashes is 1 and opt.arg.length > 1
-      list = [ @_half, 'half' ]
     else
       list = [ @_long, 'long' ]
 
@@ -163,21 +165,19 @@ class Bebopt
         if list[1] is 'short'
           err += "option requires an argument -- '#{optName}'"
         else
-          dashes = if list[1] is 'half' then '-' else '--'
-          err += "option '#{dashes}#{optName}' requires an argument"
+          err += "option '--#{optName}' requires an argument"
         console.error(err)
         process.exit(1)
       else
         list[0][opt.arg].optarg = opt.optarg
     else if opt.type is 'flag'
       if opt.optarg isnt undefined
-          err = "#{@app}"
-          dashes = if list[1] is 'half' then '-' else '--'
-          err += "option '#{dashes}#{optName}' doesn't allow an argument"
-          console.error(err)
-          process.exit(1)
-        else
-          @[list.name][optName].arg = true
+        err = "#{@app}"
+        err += "option '--#{optName}' doesn't allow an argument"
+        console.error(err)
+        process.exit(1)
+      else
+        @[list.name][optName].arg = true
 
   # loops through the option lists making sure that any options that
   # if an option takes an arg
@@ -197,16 +197,35 @@ class Bebopt
             delete @_args[ind])
         return opt
 
-  _resolveOpts: () =>
+  _syncIndexes: (list, gte) ->
+    list.forEach((elem) ->
+      if elem.index >= gte
+        ++elem.index)
+    return list
+
+  _splitCombinedShorts: () =>
     @_opts.forEach((elem, ind) =>
       dashes = elem.arg.replace(/^(--?).*/, '$1').length # number of dashes
-      elem.arg = elem.arg.replace(/^--?(.*)/, '$1')
-      console.log elem
-      if dashes is 1 and elem.arg.length < 2 # short
-        elem = @_catchSpaceDelimArgs(elem, @_short)
-      else if dashes is 1 and elem.arg.length > 1 # half
-        elem = @_catchSpaceDelimArgs(elem, @_half)
-      else if dashes is 2 and elem.arg.length > 1 # long
+      if dashes is 1
+        opts = elem.arg.replace(/^-(.*)/, '$1').split('')
+        opts = opts.reverse()
+        elem.arg = opts.pop()
+        while opts.length > 0
+          _elem = clone(elem)
+          _elem.arg = opts.pop()
+          if @_args[_elem.index] isnt undefined
+            @_syncIndexes(@_args, _elem.index)
+          @_syncIndexes(@_opts, _elem.index + 1)
+          ++_elem.index
+          console.log _elem
+          @_opts.push(_elem))
+
+  _resolveOpts: () =>
+    @_splitCombinedShorts()
+    @_log(@)
+    @_opts.forEach((elem, ind) =>
+      dashes = elem.arg.replace(/^(--?).*/, '$1').length # number of dashes
+      if dashes is 2
         elem = @_catchSpaceDelimArgs(elem, @_long)
       # check option types
       if dashes is 1 and elem.arg.length < 2 # short
@@ -219,8 +238,6 @@ class Bebopt
 
   parse: () =>
     @_gather()
-    @_log(@)
     @_resolveOpts()
-    @_log(@)
 
 module.exports = Bebopt
