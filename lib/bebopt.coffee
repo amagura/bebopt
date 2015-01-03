@@ -75,10 +75,12 @@ class Bebopt
       if fn is undefined
         self._parent.type ?= op
         self["_#{listName}"][name] = self._parent
+        self["_#{listName}"][name].parent = self._parent
       else
         self["_#{listName}"][name] =
           cb: fn
           type: op
+          parent: self._parent
       self._parent = self["_#{listName}"][name]
       return self))
 
@@ -142,56 +144,40 @@ class Bebopt
 # e.g. if an option that takes a required arg
 # has no arg, then it causes bebopt to exit
 # non-zero and prints an error message.
-  _optTypeError: (optName, optArg, nofDashes) =>
+  _optTypeError: (opt, dashes, list) =>
     # XXX this function MUST be called after we've already
     # taken the optargs passed in the `--OPTION ARG' fashion
-    # and smooshed them in their respective
-    # arg objects.
-    [
-      {
-        dashes: 1,
-        name: '_short',
-        minOptLen: 1
-      },
-      {
-        dashes: 2,
-        name: '_long',
-        minOptLen: 2
-      },
-      {
-        dashes: 1,
-        name: '_half',
-        minOptLen: 2
-      },
-      # `list' refers to the fact that `_long', `_short', and `_half' are
-      # the objects where the defined options are stored
-    ].forEach((list) =>
-      if nofDashes is list.dashes and optName.length is list.minOptLen
-        type = @[list.name][optName].type
-        switch type
-          when 'optarg'
-            @[list.name][optName].arg = optArg
-          when 'arg'
-            if optArg is undefined
-              err = "#{@app}: "
-              if name is '_short'
-                err += "option requires an argument -- '#{optName}'"
-              else
-                dashes = if name is '_half' then '-' else '--'
-                err += "option '#{dashes}#{optName}' requires an argument"
-              console.error(err)
-              process.exit(1)
-            else
-              @[list.name][optName].arg = optArg
-          when 'flag'
-            if optArg isnt undefined
-              err = "#{@app}"
-              dashes = if name is '_half' then '-' else '--'
-              err += "option '#{dashes}#{optName}' doesn't allow an argument"
-              console.error(err)
-              process.exit(1)
-            else
-              @[list.name][optName].arg = true)
+    # and smooshed them in their respective @_{short,long,half} list
+    # objects.
+    list = null
+    if dashes is 1 and opt.arg.length < 2
+      list = [ @_short, 'short' ]
+    else if dashes is 1 and opt.arg.length > 1
+      list = [ @_half, 'half' ]
+    else
+      list = [ @_long, 'long' ]
+
+    if opt.type is 'arg'
+      if opt.optarg is undefined
+        err = "#{@app}: "
+        if list[1] is 'short'
+          err += "option requires an argument -- '#{optName}'"
+        else
+          dashes = if list[1] is 'half' then '-' else '--'
+          err += "option '#{dashes}#{optName}' requires an argument"
+        console.error(err)
+        process.exit(1)
+      else
+        list[0][opt.arg].optarg = opt.optarg
+    else if opt.type is 'flag'
+      if opt.optarg isnt undefined
+          err = "#{@app}"
+          dashes = if list[1] is 'half' then '-' else '--'
+          err += "option '#{dashes}#{optName}' doesn't allow an argument"
+          console.error(err)
+          process.exit(1)
+        else
+          @[list.name][optName].arg = true
 
   # loops through the option lists making sure that any options that
   # if an option takes an arg
@@ -215,12 +201,16 @@ class Bebopt
     @_opts.forEach((elem, ind) =>
       dashes = elem.arg.replace(/^(--?).*/, '$1').length # number of dashes
       elem.arg = elem.arg.replace(/^--?(.*)/, '$1')
+      console.log elem
       if dashes is 1 and elem.arg.length < 2 # short
         elem = @_catchSpaceDelimArgs(elem, @_short)
       else if dashes is 1 and elem.arg.length > 1 # half
         elem = @_catchSpaceDelimArgs(elem, @_half)
       else if dashes is 2 and elem.arg.length > 1 # long
         elem = @_catchSpaceDelimArgs(elem, @_long)
+      # check option types
+      if dashes is 1 and elem.arg.length < 2 # short
+        elem = @_optTypeError(elem, @_short)
 
     )
 
@@ -229,6 +219,7 @@ class Bebopt
 
   parse: () =>
     @_gather()
+    @_log(@)
     @_resolveOpts()
     @_log(@)
 
