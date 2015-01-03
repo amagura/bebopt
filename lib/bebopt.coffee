@@ -85,12 +85,13 @@ class Bebopt
       return self))
 
   _optError: (parent, child) =>
-    if @["_#{parent}"][child] is undefined
+    console.log parent
+    if parent[child.arg] is undefined
       if child.length < 2
-        console.error("#{@app}: invalid option -- '#{child}'")
+        console.error("#{@app}: invalid option -- '#{child.arg}'")
         process.exit(1)
-      else if child.length > 1
-        console.error("#{@app}: unrecognized option '--#{child}'")
+      else
+        console.error("#{@app}: unrecognized option '--#{child.arg}'")
         process.exit(1)
 
   _parentError: () =>
@@ -127,7 +128,15 @@ class Bebopt
       if /^--$/.test(arg)
         optend = true
       else if /^-$/.test(arg)
-        noopt = true
+        noopt = true # XXX prevents `-' from creating an empty option object
+        # when found on the command-line: e.g. `cat -'
+        # NOTE that `-' traditionally means READ FROM STDIN
+        # however, in the case of an option parser...
+        # well, I think that it's meaningless.
+        # we should never read from STDIN, as
+        # an option parser has no business doing so.
+        # although being able to echo options like so would be interesting:
+        # `echo -- '-vhx' | <PROGRAM USING BEBOPT>` lulz
       else
         if noopt
           null # do nothing
@@ -189,6 +198,7 @@ class Bebopt
   # within the respective
   # option list, such as `@_long'
   _catchSpaceDelimArgs: (opt, list) =>
+    @_optError(list, opt)
     if list[opt.arg].type isnt 'flag'
       if opt.optarg is undefined
         @_args.forEach((nonOpt, ind) =>
@@ -203,6 +213,7 @@ class Bebopt
         ++elem.index)
     return list
 
+# XXX transforms `-hxv' into `-h -x -v'
   _splitCombinedShorts: () =>
     @_opts.forEach((elem, ind) =>
       dashes = elem.arg.replace(/^(--?).*/, '$1').length # number of dashes
@@ -225,10 +236,11 @@ class Bebopt
     @_log(@)
     @_opts.forEach((elem, ind) =>
       dashes = elem.arg.replace(/^(--?).*/, '$1').length # number of dashes
+      elem.arg = elem.arg.replace(/^--?(.*)/, '$1')
+      console.log elem
       if dashes is 2
         elem = @_catchSpaceDelimArgs(elem, @_long)
-      # check option types
-      if dashes is 1 and elem.arg.length < 2 # short
+      else
         elem = @_optTypeError(elem, @_short)
 
     )
