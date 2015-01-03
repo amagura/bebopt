@@ -20,7 +20,7 @@ var spawn       = require('child_process').spawn
   , clone       = require('clone')
   , stewardess  = require('stewardess')
   , waitress    = require('waitress')
-  , u     = require('underscore')
+  , u           = require('underscore')
   ;
 
 function TexSys(app) {
