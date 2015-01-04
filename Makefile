@@ -12,15 +12,13 @@ all: lint build ugly
 
 build:
 	$(foreach f,$(SRC),${coffee} -c $(f);)
-	touch build
-
 deps:
 	cd ${rootdir}; ${npm} install
 
 lint: deps coffeelint
-	touch lint
 
 coffeelint:
+	touch coffeelint
 	$(foreach f,$(SRC),${coffeelint} -f ${rootdir}/coffeelint.json --rules _lint/* $(f);)
 
 ugly: build
@@ -29,5 +27,4 @@ ugly: build
 clean:
 	$(foreach f,$(SRC:.coffee=.js),$(RM) $(f);)
 	$(foreach f,$(SRC:.coffee=.min.js),$(RM) $(f);)
-	$(RM) lint
-	$(RM) build
+	$(RM) coffeelint

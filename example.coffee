@@ -8,5 +8,5 @@ bebopt = new bebopt()
   .longBeat('version', () ->
     console.log('1.0')
     process.exit(0))
-  .shortBeat('v:').help('print program version and exit')
+  .shortBeat('v').help('print program version and exit')
   .parse()

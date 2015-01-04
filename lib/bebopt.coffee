@@ -84,23 +84,10 @@ class Bebopt
       self._parent = self["_#{listName}"][name]
       return self))
 
-  _optError: (parent, child) =>
-    console.log parent
-    if parent[child.arg] is undefined
-      if child.length < 2
-        console.error("#{@app}: invalid option -- '#{child.arg}'")
-        process.exit(1)
-      else
-        console.error("#{@app}: unrecognized option '--#{child.arg}'")
-        process.exit(1)
-
-  _parentError: () =>
+  help: (text) =>
     if @_parent is null
       err = 'Bebopt: null parent ref: cannot apply'
       throw new Error(err)
-
-  help: (text) =>
-    @_parentError()
     @_parent.usage = text
     @_parent = null
     return @
@@ -115,6 +102,115 @@ class Bebopt
       opt: _opt,
       _arg: arg
     }
+
+# validates the incoming command-line options
+# e.g. if an option that takes a required arg
+# has no arg, then it causes bebopt to exit
+# non-zero and prints an error message.
+  _optTypeError: (opt, list) =>
+    # XXX this function MUST be called after we've already
+    # taken the optargs passed in the `--OPTION ARG' fashion
+    # and smooshed them in their respective @_{short,long,half} list
+    # objects.
+    if opt.type is 'arg'
+      if opt.optarg is undefined
+        err = "#{@app}: "
+        if list[1] is 'short'
+          err += "option requires an argument -- '#{optName}'"
+        else
+          err += "option '--#{optName}' requires an argument"
+        console.error(err)
+        process.exit(1)
+      else
+        list[0][opt.arg].optarg = opt.optarg
+    else if opt.type is 'flag'
+      if opt.optarg isnt undefined
+        err = "#{@app}"
+        err += "option '--#{optName}' doesn't allow an argument"
+        console.error(err)
+        process.exit(1)
+      else
+        @[list.name][optName].arg = true
+
+  # loops through the option lists making sure that any options that
+  # if an option takes an arg
+  # but that arg was specified in the
+  # `--OPTION=<ARG>' fashion
+  # that if the `ARG' was specified
+  # in the `--OPTION <ARG>' fashion
+  # that arg is added to the option's object
+  # within the respective
+  # option list, such as `@_long'
+  _catchSpaceDelimArgs: (opt, list, listName) =>
+    @_catchInvalidOpt(opt, listName)
+    if list[opt.arg].type isnt 'flag'
+      if opt.optarg is undefined
+        @_args.forEach((nonOpt, ind) =>
+          if nonOpt.index is (opt.index + 1)
+            opt.optarg = nonOpt.arg
+            delete @_args[ind])
+        return opt
+
+  _catchInvalidOpt: (opt, list) =>
+    console.log list.toString()
+    if opt.arg.length < 2 and @_short[opt.arg] is undefined
+      console.error("#{@app}: invalid option -- '#{opt.arg}'")
+      process.exit(1)
+    else if opt.arg.length > 1 and @_long[opt.arg] is undefined
+      console.error("#{@app}: unrecognized option '--#{opt.arg}'")
+      process.exit(1)
+
+  _syncIndexes: (list, gte) ->
+    list.forEach((elem) ->
+      if elem.index >= gte
+        ++elem.index)
+    return list
+
+# XXX transforms `-hxv' into `-h -x -v'
+  _splitCombinedShorts: () =>
+    @_opts.forEach((elem, ind) =>
+      dashes = elem.arg.replace(/^(--?).*/, '$1').length # number of dashes
+      if dashes is 1
+        opts = elem.arg.replace(/^-(.*)/, '$1').split('')
+        opts = opts.reverse()
+        elem.arg = opts.pop()
+        while opts.length > 0
+          _elem = clone(elem)
+          _elem.arg = opts.pop()
+          if @_args[_elem.index] isnt undefined
+            @_syncIndexes(@_args, _elem.index)
+          @_syncIndexes(@_opts, _elem.index + 1)
+          ++_elem.index
+          console.log _elem
+          @_opts.push(_elem))
+
+  _takesArg: (opt) =>
+    if opt.arg.length < 2
+      if type isnt 'flag'
+        return true
+      else
+        return false
+    else
+      type = @_long[opt.arg].type
+      if type isnt 'flag'
+        return true
+      else
+        return false
+
+  _log: (y) ->
+    console.log(util.inspect(y, { colors: true, depth: null }))
+
+  _resolveOpts: () =>
+    @_splitCombinedShorts()
+    @_opts.forEach((elem, ind) =>
+      dashes = elem.arg.replace(/^(--?).*/, '$1').length # number of dashes
+      elem.arg = elem.arg.replace(/^--?(.*)/, '$1')
+      if dashes is 2
+        elem = @_catchSpaceDelimArgs(elem, @_long, 'long')
+      else
+        elem = @_catchSpaceDelimArgs(elem, @_short, 'short')
+
+    )
 
 # processes `process.arv' producing two arrays, one containing options,
 # their indexes and any arguments passed in the `--OPTION=ARG' fashion,
@@ -152,101 +248,6 @@ class Bebopt
             arg: opt,
             optarg: _arg,
             index: ind }))
-
-# validates the incoming command-line options
-# e.g. if an option that takes a required arg
-# has no arg, then it causes bebopt to exit
-# non-zero and prints an error message.
-  _optTypeError: (opt, dashes, list) =>
-    # XXX this function MUST be called after we've already
-    # taken the optargs passed in the `--OPTION ARG' fashion
-    # and smooshed them in their respective @_{short,long,half} list
-    # objects.
-    list = null
-    if dashes is 1
-      list = [ @_short, 'short' ]
-    else
-      list = [ @_long, 'long' ]
-
-    if opt.type is 'arg'
-      if opt.optarg is undefined
-        err = "#{@app}: "
-        if list[1] is 'short'
-          err += "option requires an argument -- '#{optName}'"
-        else
-          err += "option '--#{optName}' requires an argument"
-        console.error(err)
-        process.exit(1)
-      else
-        list[0][opt.arg].optarg = opt.optarg
-    else if opt.type is 'flag'
-      if opt.optarg isnt undefined
-        err = "#{@app}"
-        err += "option '--#{optName}' doesn't allow an argument"
-        console.error(err)
-        process.exit(1)
-      else
-        @[list.name][optName].arg = true
-
-  # loops through the option lists making sure that any options that
-  # if an option takes an arg
-  # but that arg was specified in the
-  # `--OPTION=<ARG>' fashion
-  # that if the `ARG' was specified
-  # in the `--OPTION <ARG>' fashion
-  # that arg is added to the option's object
-  # within the respective
-  # option list, such as `@_long'
-  _catchSpaceDelimArgs: (opt, list) =>
-    @_optError(list, opt)
-    if list[opt.arg].type isnt 'flag'
-      if opt.optarg is undefined
-        @_args.forEach((nonOpt, ind) =>
-          if nonOpt.index is (opt.index + 1)
-            opt.optarg = nonOpt.arg
-            delete @_args[ind])
-        return opt
-
-  _syncIndexes: (list, gte) ->
-    list.forEach((elem) ->
-      if elem.index >= gte
-        ++elem.index)
-    return list
-
-# XXX transforms `-hxv' into `-h -x -v'
-  _splitCombinedShorts: () =>
-    @_opts.forEach((elem, ind) =>
-      dashes = elem.arg.replace(/^(--?).*/, '$1').length # number of dashes
-      if dashes is 1
-        opts = elem.arg.replace(/^-(.*)/, '$1').split('')
-        opts = opts.reverse()
-        elem.arg = opts.pop()
-        while opts.length > 0
-          _elem = clone(elem)
-          _elem.arg = opts.pop()
-          if @_args[_elem.index] isnt undefined
-            @_syncIndexes(@_args, _elem.index)
-          @_syncIndexes(@_opts, _elem.index + 1)
-          ++_elem.index
-          console.log _elem
-          @_opts.push(_elem))
-
-  _resolveOpts: () =>
-    @_splitCombinedShorts()
-    @_log(@)
-    @_opts.forEach((elem, ind) =>
-      dashes = elem.arg.replace(/^(--?).*/, '$1').length # number of dashes
-      elem.arg = elem.arg.replace(/^--?(.*)/, '$1')
-      console.log elem
-      if dashes is 2
-        elem = @_catchSpaceDelimArgs(elem, @_long)
-      else
-        elem = @_optTypeError(elem, @_short)
-
-    )
-
-  _log: (y) ->
-    console.log(util.inspect(y, { colors: true, depth: null }))
 
   parse: () =>
     @_gather()
