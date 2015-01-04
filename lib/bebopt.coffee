@@ -18,8 +18,8 @@ limitations under the License.
 'use strict'
 
 util      = require 'util'
-deepEqual = require './equal'
 clone     = require 'clone'
+deepEqual = require './deep-equal'
 
 class Bebopt
   constructor: (@app) ->
@@ -27,9 +27,11 @@ class Bebopt
     @_long = {}
     @_short = {}
     @_parent = null
-    @__options = []
     # XXX for the people; lol, that is this is a protected copy of `argv'
     @_raw = process.argv
+    @_cooked = []
+    @_eaten = {}
+    @usage = undefined
 
   _beatError: (parent, name) ->
     switch parent
@@ -75,12 +77,16 @@ class Bebopt
       if fn is undefined
         self._parent.type ?= op
         self["_#{listName}"][name] = self._parent
-        #self["_#{listName}"][name].parent = self._parent
+        self["_#{listName}"][name].names.push(name)
+        self["_#{listName}"][name].list.push(listName)
       else
         self["_#{listName}"][name] =
           cb: fn
           type: op
-          #parent: self._parent
+          names: []
+          list: []
+        self["_#{listName}"][name].names.push(name)
+        self["_#{listName}"][name].list.push(listName)
       self._parent = self["_#{listName}"][name]
       return self))
 
@@ -91,6 +97,33 @@ class Bebopt
     @_parent.usage = text
     @_parent = null
     return @
+
+  printHelp: (fn) =>
+    usage = if @usage is undefined then "Usage: #{@app}" else @usage
+    if fn is undefined
+      console.error(usage)
+    else
+      fn(usage)
+
+    _long = Object.keys(@_long).map((key) ->
+      
+    _options = _long.concat(Object.keys(@_short))
+    @_cooked.forEach((food) ->
+      if food.list[0] isnt 'short'
+        food.names = food.names.reverse()
+        food.list = food.list.reverse()
+      food.names = food.names.map((name, ind) ->
+        dashes = if food.list[ind] is 'short' then '-' else '--'
+        name = "#{dashes}#{clone(name)}"
+        return name)
+      names = food.names.join(', ')
+      if fn is undefined
+        console.error("  #{names}#{food.usage}")
+      else
+        fn("  #{names}#{food.usage}"))
+
+  usage: (text) =>
+    @usage = text
 
   _sepOptArg: (opt) ->
     if ///=///.test(opt)
@@ -179,15 +212,15 @@ class Bebopt
       if dashes is 2
         if @_takesArg(elem, 'long')
           elem = @_catchSpaceDelimArgs(elem, @_long)
-        console.log elem
         @_bindOptToList(elem, 'long')
+        food = clone(@_long[elem.arg])
+        @_cooked.push(food)
       else
         if @_takesArg(elem, 'short')
           elem = @_catchSpaceDelimArgs(elem, @_short)
-        console.log elem
         @_bindOptToList(elem, 'short')
-
-    )
+        food = clone(@_short[elem.arg])
+        @_cooked.push(food))
 
   _bindOptToList: (opt, listName) =>
     list = @["_#{listName}"]
@@ -251,9 +284,35 @@ class Bebopt
             optarg: _arg,
             index: ind }))
 
+  _runCallbacks: () =>
+    @_cooked.forEach((food) =>
+      optarg = food.cb.apply(@, [food.optarg])
+      food.names.forEach((name) =>
+        yummy = optarg
+        @_eaten[name] = yummy))
+
+  _clean: () =>
+    Object.keys(@).forEach((key) =>
+      if /^_/.test(key)
+        switch key
+          when '_runCallbacks'
+            null
+          when '_log'
+            null
+          when '_raw'
+            null
+          when '_cooked'
+            null
+          when '_eaten'
+            null
+          else
+            delete this[key])
+    return @
+
   parse: () =>
     @_gather()
     @_resolveOpts()
     @_log(@)
+    @_runCallbacks()
 
 module.exports = Bebopt

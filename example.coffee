@@ -1,12 +1,12 @@
-bebopt = require './index'
+Bebopt = require './index'
 
-bebopt = new bebopt()
+bebopt = new Bebopt()
   .longBeat('help::', () ->
-    bebopt.printHelp()
+    @printHelp()
     process.exit(0))
-  .shortBeat('h').help('print this message and exit')
+  .shortBeat('h').help('\tprint this message and exit')
   .longBeat('version', () ->
     console.log('1.0')
     process.exit(0))
-  .shortBeat('v').help('print program version and exit')
+  .shortBeat('v').help('\tprint program version and exit')
   .parse()
