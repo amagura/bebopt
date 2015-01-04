@@ -75,12 +75,12 @@ class Bebopt
       if fn is undefined
         self._parent.type ?= op
         self["_#{listName}"][name] = self._parent
-        self["_#{listName}"][name].parent = self._parent
+        #self["_#{listName}"][name].parent = self._parent
       else
         self["_#{listName}"][name] =
           cb: fn
           type: op
-          parent: self._parent
+          #parent: self._parent
       self._parent = self["_#{listName}"][name]
       return self))
 
@@ -103,35 +103,6 @@ class Bebopt
       _arg: arg
     }
 
-# validates the incoming command-line options
-# e.g. if an option that takes a required arg
-# has no arg, then it causes bebopt to exit
-# non-zero and prints an error message.
-  _optTypeError: (opt, list) =>
-    # XXX this function MUST be called after we've already
-    # taken the optargs passed in the `--OPTION ARG' fashion
-    # and smooshed them in their respective @_{short,long,half} list
-    # objects.
-    if opt.type is 'arg'
-      if opt.optarg is undefined
-        err = "#{@app}: "
-        if list[1] is 'short'
-          err += "option requires an argument -- '#{optName}'"
-        else
-          err += "option '--#{optName}' requires an argument"
-        console.error(err)
-        process.exit(1)
-      else
-        list[0][opt.arg].optarg = opt.optarg
-    else if opt.type is 'flag'
-      if opt.optarg isnt undefined
-        err = "#{@app}"
-        err += "option '--#{optName}' doesn't allow an argument"
-        console.error(err)
-        process.exit(1)
-      else
-        @[list.name][optName].arg = true
-
   # loops through the option lists making sure that any options that
   # if an option takes an arg
   # but that arg was specified in the
@@ -141,22 +112,20 @@ class Bebopt
   # that arg is added to the option's object
   # within the respective
   # option list, such as `@_long'
-  _catchSpaceDelimArgs: (opt, list, listName) =>
-    @_catchInvalidOpt(opt, listName)
+  _catchSpaceDelimArgs: (opt, list) =>
     if list[opt.arg].type isnt 'flag'
       if opt.optarg is undefined
         @_args.forEach((nonOpt, ind) =>
           if nonOpt.index is (opt.index + 1)
             opt.optarg = nonOpt.arg
             delete @_args[ind])
-        return opt
+    return opt
 
   _catchInvalidOpt: (opt, list) =>
-    console.log list.toString()
-    if opt.arg.length < 2 and @_short[opt.arg] is undefined
+    if list is 'short' and @_short[opt.arg] is undefined
       console.error("#{@app}: invalid option -- '#{opt.arg}'")
       process.exit(1)
-    else if opt.arg.length > 1 and @_long[opt.arg] is undefined
+    else if list is 'long' and @_long[opt.arg] is undefined
       console.error("#{@app}: unrecognized option '--#{opt.arg}'")
       process.exit(1)
 
@@ -184,8 +153,10 @@ class Bebopt
           console.log _elem
           @_opts.push(_elem))
 
-  _takesArg: (opt) =>
-    if opt.arg.length < 2
+  _takesArg: (opt, listName) =>
+    @_catchInvalidOpt(opt, listName)
+    if listName is 'short'
+      type = @_short[opt.arg].type
       if type isnt 'flag'
         return true
       else
@@ -206,11 +177,42 @@ class Bebopt
       dashes = elem.arg.replace(/^(--?).*/, '$1').length # number of dashes
       elem.arg = elem.arg.replace(/^--?(.*)/, '$1')
       if dashes is 2
-        elem = @_catchSpaceDelimArgs(elem, @_long, 'long')
+        if @_takesArg(elem, 'long')
+          elem = @_catchSpaceDelimArgs(elem, @_long)
+        console.log elem
+        @_bindOptToList(elem, 'long')
       else
-        elem = @_catchSpaceDelimArgs(elem, @_short, 'short')
+        if @_takesArg(elem, 'short')
+          elem = @_catchSpaceDelimArgs(elem, @_short)
+        console.log elem
+        @_bindOptToList(elem, 'short')
 
     )
+
+  _bindOptToList: (opt, listName) =>
+    list = @["_#{listName}"]
+    type = list[opt.arg].type
+    if type is 'arg'
+      if opt.optarg is undefined
+        err = "#{@app}: "
+        if listName is 'short'
+          err += "option requires an argument -- '#{opt.arg}'"
+        else
+          err += "option '--#{opt.arg}' requires an argument"
+        console.error(err)
+        process.exit(1)
+      else
+        list[opt.arg].optarg = opt.optarg
+    else if type is 'optarg'
+      list[opt.arg].optarg = opt.optarg
+    else if type is 'flag'
+      if opt.optarg isnt undefined
+        err = "#{@app}"
+        err += "option '--#{opt.arg}' doesn't allow an argument"
+        console.error(err)
+        process.exit(1)
+      else
+        list[opt.arg].optarg = true
 
 # processes `process.arv' producing two arrays, one containing options,
 # their indexes and any arguments passed in the `--OPTION=ARG' fashion,
@@ -252,5 +254,6 @@ class Bebopt
   parse: () =>
     @_gather()
     @_resolveOpts()
+    @_log(@)
 
 module.exports = Bebopt
