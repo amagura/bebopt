@@ -9,4 +9,6 @@ bebopt = new Bebopt()
     console.log('1.0')
     process.exit(0))
   .shortBeat('v').help('\tprint program version and exit')
+  .shortBeat('x', () ->
+    @).help('\tblah')
   .parse()
