@@ -20,18 +20,19 @@ limitations under the License.
 util      = require 'util'
 clone     = require 'clone'
 deepEqual = require './deep-equal'
+basename  = require('path').basename
 
 class Bebopt
   constructor: (@app) ->
-    @app ?= 'bebopt'
-    @_long = {}
-    @_short = {}
+    @app ?= basename(process.argv[1])
+    @_options = []
     @_parent = null
     # XXX for the people; lol, that is this is a protected copy of `argv'
     @_raw = process.argv
     @_cooked = []
     @_eaten = {}
     @usage = undefined
+    @_help = []
 
   _beatError: (parent, name) ->
     switch parent
@@ -47,11 +48,11 @@ class Bebopt
         return false
 
   _makeOpt: (name) ->
-    _op = name.replace(/^.*?([:]*)$/, '$1')
+    new_op = name.replace(/^.*?([:]*)$/, '$1')
     name = name.replace(/^(.*?)[:]*$/, '$1')
-    if _op is '::'
+    if new_op is '::'
       op = 'optarg'
-    else if op is ':'
+    else if new_op is ':'
       op = 'arg'
     else
       op = 'flag'
@@ -60,7 +61,8 @@ class Bebopt
       name: name
     }
 
-  # a bit of black magic ;)
+  # creates a function as a prototype of `context'.
+  # can be used to mass-produce class methods
   `function _makeFun(context, name, cb) {
     context.prototype[name] = cb;
     return context;
@@ -69,25 +71,38 @@ class Bebopt
   [ 'shortBeat', 'longBeat' ].forEach((funcName) =>
     listName = funcName.replace(/Beat/, '')
     return _makeFun(@, funcName, (_name, fn) ->
-      # namespace err.. context injection ;)
       self = @
+      # determine the type of OPTION, based on the OPTION's name
       { op, name } = self._makeOpt(_name)
       self._beatError(listName, name)
 
       if fn is undefined
         self._parent.type ?= op
-        self["_#{listName}"][name] = self._parent
-        self["_#{listName}"][name].names.push(name)
-        self["_#{listName}"][name].list.push(listName)
+        child = clone(self._parent)
+        # give child a pointer to its parent
+        child.parent = self._parent
+        child.parent.index = child.index
+
+        ++child.index # increment child.index again to set it to its own index
+        child.name = name
+        child.list = listName
+        # give parent a pointer to its child
+        self._parent.child = child
+        self._options.push(child)
       else
-        self["_#{listName}"][name] =
+        option =
           cb: fn
           type: op
-          names: []
-          list: []
-        self["_#{listName}"][name].names.push(name)
-        self["_#{listName}"][name].list.push(listName)
-      self._parent = self["_#{listName}"][name]
+          name: name
+          list: listName
+          child: null
+          parent: null
+        self._options.push(option)
+        index = self._options.length - 1
+        option = self._options.pop()
+        option.index = index
+        self._options.push(option)
+      self._parent = self._options.slice(-1)[0]
       return self))
 
   help: (text) =>
@@ -98,29 +113,44 @@ class Bebopt
     @_parent = null
     return @
 
+  _parentOrChildUsage: (opt) =>
+    if typeof opt.usage isnt 'string'
+      if opt.parent is null
+        if opt.child is null
+          return ''
+        else
+          return @_options[opt.child.index].usage
+      else
+        return @_options[opt.parent.index].usage
+    else
+      return opt.usage
+
+  _makeHelp: () =>
+    @_options.forEach((opt) =>
+      dashes = if opt.list is 'short' then '-' else '--'
+      usage = @_parentOrChildUsage(opt)
+      if opt.child is null
+        if opt.parent is null
+          @_help.push("  #{dashes}#{opt.name}#{usage}")
+      else
+        if opt.parent is null
+          if dashes is '--'
+            @_help.push("  -#{opt.child.name}, #{dashes}#{opt.name}#{usage}")
+          else
+            @_help.push("  #{dashes}#{opt.name}, --#{opt.child.name}#{usage}")
+    )
+    @_log(@)
+
   printHelp: (fn) =>
     usage = if @usage is undefined then "Usage: #{@app}" else @usage
     if fn is undefined
       console.error(usage)
+      @_help.forEach((txt) ->
+        console.error(txt))
     else
       fn(usage)
-
-    _long = Object.keys(@_long).map((key) ->
-      
-    _options = _long.concat(Object.keys(@_short))
-    @_cooked.forEach((food) ->
-      if food.list[0] isnt 'short'
-        food.names = food.names.reverse()
-        food.list = food.list.reverse()
-      food.names = food.names.map((name, ind) ->
-        dashes = if food.list[ind] is 'short' then '-' else '--'
-        name = "#{dashes}#{clone(name)}"
-        return name)
-      names = food.names.join(', ')
-      if fn is undefined
-        console.error("  #{names}#{food.usage}")
-      else
-        fn("  #{names}#{food.usage}"))
+      @_help.forEach((txt) ->
+        fn(txt))
 
   usage: (text) =>
     @usage = text
@@ -294,25 +324,22 @@ class Bebopt
   _clean: () =>
     Object.keys(@).forEach((key) =>
       if /^_/.test(key)
-        switch key
-          when '_runCallbacks'
-            null
-          when '_log'
-            null
-          when '_raw'
-            null
-          when '_cooked'
-            null
-          when '_eaten'
-            null
-          else
-            delete this[key])
+        [
+          '_runCallbacks',
+          '_log',
+          '_raw',
+          '_cooked',
+          '_eaten',
+          '_help'
+        ].forEach((target) =>
+          if key isnt target
+            delete @[key]))
     return @
 
   parse: () =>
+    @_makeHelp()
     @_gather()
     @_resolveOpts()
-    @_log(@)
-    @_runCallbacks()
+    #@_runCallbacks()
 
 module.exports = Bebopt
