@@ -85,7 +85,7 @@ i.e. `if (args.h) args.showHelp();'
 ```javascript
 var Bebopt = require('bebopt');
 
-var args = Bebopt()
+var args = new Bebopt()
     .usage('Do Stuff')
     .shortOption('h', function() { this.printHelp(); process.exit(0); })
       .help('\tprint this message and exit')
