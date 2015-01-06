@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-var Bebopt = require('./index')
+var bebopt = require('./index')
   ;
 
-var argv = new Bebopt()
+var argv = bebopt()
   .longOption('help::', function() {
     this.printHelp();
     process.exit(0);

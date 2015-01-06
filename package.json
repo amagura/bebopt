@@ -4,12 +4,13 @@
   "description": "a more powerful, and coincidentally musical, option parser for node.js/coffeescript",
   "main": "index",
   "dependencies": {
-    "clone": "~0.2.0"
+    "clone": "0.x.x"
   },
   "devDependencies": {
-    "coffee-script": "~1.8.0",
-    "tape": "~3.0.3",
-    "uglify-js": "~2.4.16"
+    "chai": "1.x.x",
+    "coffee-script": "1.x.x",
+    "mocha": "2.x.x",
+    "uglify-js": "2.x.x"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

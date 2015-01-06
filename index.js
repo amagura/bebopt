@@ -1,2 +1,2 @@
-var Bebopt = require('./lib/bebopt');
-module.exports = Bebopt;
+var bebopt = require('./lib/mode');
+module.exports = bebopt;
