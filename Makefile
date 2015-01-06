@@ -17,7 +17,7 @@ ugly:
 clean:
 	$(foreach f,$(SRC:.js=.min.js),$(RM) $(f);)
 
-release: ugly
+release: deps ugly
 	tar cf bebopt.tar lib/bebopt.js index.js package.json LICENSE
 	sed -i 's/index/index.min/' package.json
 	cat package.json
