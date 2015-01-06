@@ -1,6 +1,6 @@
 {
   "name": "bebopt",
-  "version": "0.1",
+  "version": "0.1.0",
   "description": "a more powerful, and coincidentally musical, option parser for node.js/coffeescript",
   "main": "index.js",
   "dependencies": {
