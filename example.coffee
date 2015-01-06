@@ -1,17 +1,17 @@
 #!/usr/bin/env coffee
 Bebopt = require './index'
 
-argv = new Bebopt(null, 'abbrev')
+argv = new Bebopt()
   .lO('help::', () ->
-    @pHp()
+    @printHelp()
     process.exit(0))
-  .sO('h').help('\tprint this message and exit')
+  .sO('h', '\tprint this message and exit')
   .lO('version', () ->
     console.log('1.0')
     process.exit(0))
-  .sO('v').help('\tprint program version and exit')
-  .sO('x', () ->
-    @).help('\t\tblah')
+  .sO('v', '\tprint program version and exit')
+  .sO('x', '\t\tblah', () ->
+    @_log(@))
   .parse()
 
 console.log argv
