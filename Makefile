@@ -18,8 +18,8 @@ clean:
 	$(foreach f,$(SRC:.js=.min.js),$(RM) $(f);)
 
 release: ugly
-	tar cf bebopt.tar $(SRC) package.json LICENSE
-	tar cf bebopt.min.tar $(SRC:.js=.min.js)
+	tar cf bebopt.tar lib/bebopt.js index.js package.json LICENSE
+	tar cf bebopt.min.tar lib/bebopt.min.js index.min.js
 	git checkout void
 	git clean -e bebopt.tar -e bebopt.min.tar -f
 	tar xf bebopt.tar
