@@ -19,7 +19,6 @@ limitations under the License.
 
 util      = require 'util'
 clone     = require 'clone'
-deepEqual = require './deep-equal'
 basename  = require('path').basename
 
 class Bebopt
