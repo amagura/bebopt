@@ -1,5 +1,5 @@
 # Bebopt [![Build Status](https://travis-ci.org/amagura/bebopt.svg?branch=master)](https://travis-ci.org/amagura/bebopt)
-a more powerful, and coincidentally musical, option parser for node.js/coffeescript
+a more powerful option parser for node.js
 
 ### NOTE
 __this README is under construction!__
@@ -87,9 +87,9 @@ var Bebopt = require('bebopt');
 
 var args = Bebopt()
     .usage('Do Stuff')
-    .shortBeat('h', function() { this.printHelp(); process.exit(0); })
+    .shortOption('h', function() { this.printHelp(); process.exit(0); })
       .help('\tprint this message and exit')
-    .shortBeat('v', function() { console.log('1.0'); process.exit(0); })
+    .shortOption('v', function() { console.log('1.0'); process.exit(0); })
       .help('\tprint program version and exit')
     .parse();
 /* that's it. */
