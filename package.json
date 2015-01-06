@@ -25,5 +25,8 @@
   "bugs": {
     "url": "https://github.com/amagura/bebopt/issues"
   },
-  "homepage": "https://github.com/amagura/bebopt"
+  "homepage": "https://github.com/amagura/bebopt",
+  "devDependencies": {
+    "uglify-js": "~2.4.16"
+  }
 }
