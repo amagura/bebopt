@@ -1,6 +1,9 @@
 # Bebopt [![Build Status](https://travis-ci.org/amagura/bebopt.svg?branch=master)](https://travis-ci.org/amagura/bebopt)
 a more powerful option parser for node.js
 
+## Index
+
+
 ### NOTE
 __this README is under construction!__
 
