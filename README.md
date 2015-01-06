@@ -2,7 +2,7 @@
 a more powerful, and coincidentally musical, option parser for node.js/coffeescript
 
 ### NOTE
-this README is under construction!
+__this README is under construction!__
 
 # Why another option parser?
 Because too many of the option parsers available for node.js suffer from being either too low-level but powerful, or too high-level but weak.  In node.js, at least, it seems that the smarter a program is, the less control it gives the end-user.
