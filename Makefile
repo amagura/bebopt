@@ -19,9 +19,10 @@ clean:
 
 release: ugly
 	tar cf bebopt.tar lib/bebopt.js index.js package.json LICENSE
-	tar cf bebopt.min.tar lib/bebopt.min.js index.min.js
+	sed -i 's/index/index.min/' package.json
+	tar czf bebopt.min.tar.gz lib/bebopt.min.js index.min.js package.json LICENSE
+	sed -i 's/index[.]min/index/' package.json
 	git checkout void
 	git clean -e bebopt.tar -e bebopt.min.tar -f
 	tar xf bebopt.tar
-	tar xf bebopt.min.tar
-	git add package.json LICENSE index.js index.min.js lib
+	git add package.json LICENSE index.js lib
