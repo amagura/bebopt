@@ -20,7 +20,6 @@ clean:
 release: deps ugly
 	tar cf bebopt.tar lib/bebopt.js index.js package.json LICENSE
 	sed -i 's/index/index.min/' package.json
-	cat package.json
 	tar czf bebopt.min.tar.gz lib/bebopt.min.js index.min.js package.json LICENSE
 	sed -i 's/index[.]min/index/' package.json
 	git checkout void
