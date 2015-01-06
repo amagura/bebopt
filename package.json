@@ -1,0 +1,29 @@
+{
+  "name": "bebopt",
+  "version": "0.1",
+  "description": "a more powerful, and coincidentally musical, option parser for node.js/coffeescript",
+  "main": "index.js",
+  "dependencies": {
+    "clone": "~0.2.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/amagura/bebopt"
+  },
+  "keywords": [
+    "getopt",
+    "parser",
+    "argv",
+    "command-line",
+    "option-parser"
+  ],
+  "author": "Alexej Magura",
+  "license": "Apache 2.0",
+  "bugs": {
+    "url": "https://github.com/amagura/bebopt/issues"
+  },
+  "homepage": "https://github.com/amagura/bebopt"
+}
