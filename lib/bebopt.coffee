@@ -86,6 +86,7 @@ class Bebopt
         ++child.index # increment child.index again to set it to its own index
         child.name = name
         child.list = listName
+        child.arg = undefined
         # give parent a pointer to its child
         self._parent.child = child
         self._options.push(child)
@@ -97,6 +98,7 @@ class Bebopt
           list: listName
           child: null
           parent: null
+          arg: undefined
         self._options.push(option)
         index = self._options.length - 1
         option = self._options.pop()
@@ -137,9 +139,7 @@ class Bebopt
           if dashes is '--'
             @_help.push("  -#{opt.child.name}, #{dashes}#{opt.name}#{usage}")
           else
-            @_help.push("  #{dashes}#{opt.name}, --#{opt.child.name}#{usage}")
-    )
-    @_log(@)
+            @_help.push("  #{dashes}#{opt.name}, --#{opt.child.name}#{usage}"))
 
   printHelp: (fn) =>
     usage = if @usage is undefined then "Usage: #{@app}" else @usage
@@ -176,7 +176,8 @@ class Bebopt
   # within the respective
   # option list, such as `@_long'
   _catchSpaceDelimArgs: (opt, list) =>
-    if list[opt.arg].type isnt 'flag'
+    type = @_getOption(opt, list).type
+    if type isnt 'flag'
       if opt.optarg is undefined
         @_args.forEach((nonOpt, ind) =>
           if nonOpt.index is (opt.index + 1)
@@ -185,10 +186,11 @@ class Bebopt
     return opt
 
   _catchInvalidOpt: (opt, list) =>
-    if list is 'short' and @_short[opt.arg] is undefined
+    option = @_getOption(opt, list)
+    if list is 'short' and option is undefined
       console.error("#{@app}: invalid option -- '#{opt.arg}'")
       process.exit(1)
-    else if list is 'long' and @_long[opt.arg] is undefined
+    else if list is 'long' and option is undefined
       console.error("#{@app}: unrecognized option '--#{opt.arg}'")
       process.exit(1)
 
@@ -197,6 +199,21 @@ class Bebopt
       if elem.index >= gte
         ++elem.index)
     return list
+
+  _getOption: (opt, listName) =>
+    option = @_options.filter((mem) ->
+      if opt.arg is mem.name and listName is mem.list
+        return mem)
+    return `option.length === 0 ? undefined : option[0]`
+
+  _setOptionArg: (opt, listName) =>
+    option = @_getOption(opt, listName)
+    option.arg = opt.optarg
+    if option.child isnt null
+      @_options[option.child.index].arg = opt.optarg
+    if option.parent isnt null
+      @_options[option.parent.index].arg = opt.optarg
+    return undefined
 
 # XXX transforms `-hxv' into `-h -x -v'
   _splitCombinedShorts: () =>
@@ -218,18 +235,11 @@ class Bebopt
 
   _takesArg: (opt, listName) =>
     @_catchInvalidOpt(opt, listName)
-    if listName is 'short'
-      type = @_short[opt.arg].type
-      if type isnt 'flag'
-        return true
-      else
-        return false
+    type = @_getOption(opt, listName).type
+    if type isnt 'flag'
+      return true
     else
-      type = @_long[opt.arg].type
-      if type isnt 'flag'
-        return true
-      else
-        return false
+      return false
 
   _log: (y) ->
     console.log(util.inspect(y, { colors: true, depth: null }))
@@ -241,20 +251,19 @@ class Bebopt
       elem.arg = elem.arg.replace(/^--?(.*)/, '$1')
       if dashes is 2
         if @_takesArg(elem, 'long')
-          elem = @_catchSpaceDelimArgs(elem, @_long)
+          elem = @_catchSpaceDelimArgs(elem, 'long')
         @_bindOptToList(elem, 'long')
-        food = clone(@_long[elem.arg])
-        @_cooked.push(food)
+        option = @_getOption(elem, 'long')
+        @_cooked.push(option)
       else
         if @_takesArg(elem, 'short')
-          elem = @_catchSpaceDelimArgs(elem, @_short)
+          elem = @_catchSpaceDelimArgs(elem, 'short')
         @_bindOptToList(elem, 'short')
-        food = clone(@_short[elem.arg])
-        @_cooked.push(food))
+        option = @_getOption(elem, 'short')
+        @_cooked.push(option))
 
   _bindOptToList: (opt, listName) =>
-    list = @["_#{listName}"]
-    type = list[opt.arg].type
+    type = @_getOption(opt, listName).type
     if type is 'arg'
       if opt.optarg is undefined
         err = "#{@app}: "
@@ -265,9 +274,9 @@ class Bebopt
         console.error(err)
         process.exit(1)
       else
-        list[opt.arg].optarg = opt.optarg
+        @_setOptionArg(opt, listName)
     else if type is 'optarg'
-      list[opt.arg].optarg = opt.optarg
+      @_setOptionArg(opt, listName)
     else if type is 'flag'
       if opt.optarg isnt undefined
         err = "#{@app}"
@@ -275,7 +284,8 @@ class Bebopt
         console.error(err)
         process.exit(1)
       else
-        list[opt.arg].optarg = true
+        opt.optarg = true
+        @_setOptionArg(opt, listName)
 
 # processes `process.arv' producing two arrays, one containing options,
 # their indexes and any arguments passed in the `--OPTION=ARG' fashion,
@@ -315,31 +325,37 @@ class Bebopt
             index: ind }))
 
   _runCallbacks: () =>
-    @_cooked.forEach((food) =>
-      optarg = food.cb.apply(@, [food.optarg])
-      food.names.forEach((name) =>
-        yummy = optarg
-        @_eaten[name] = yummy))
+    @_cooked.forEach((opt) =>
+      arg = opt.cb.apply(@, [opt.arg])
+      @_eaten[opt.name] = arg
+      if opt.child isnt null
+        @_eaten[opt.child.name] = arg
+      if opt.parent isnt null
+        @_eaten[opt.parent.name] = arg)
 
   _clean: () =>
     Object.keys(@).forEach((key) =>
       if /^_/.test(key)
-        [
-          '_runCallbacks',
-          '_log',
-          '_raw',
-          '_cooked',
-          '_eaten',
-          '_help'
-        ].forEach((target) =>
-          if key isnt target
-            delete @[key]))
-    return @
+        switch key
+          when '_runCallbacks'
+            null
+          when '_raw'
+            null
+          when '_cooked'
+            null
+          when '_eaten'
+            null
+          when '_help'
+            null
+          else
+            delete @[key])
 
   parse: () =>
     @_makeHelp()
     @_gather()
     @_resolveOpts()
-    #@_runCallbacks()
+    @_clean()
+    @_runCallbacks()
+    return @_eaten
 
 module.exports = Bebopt
