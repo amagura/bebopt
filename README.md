@@ -87,8 +87,10 @@ var Bebopt = require('bebopt');
 
 var args = Bebopt()
     .usage('Do Stuff')
-    .shortBeat('h', function() { this.printHelp(); process.exit(0); }).help('\tprint this message and exit')
-    .shortBeat('v', function() { console.log('1.0'); process.exit(0); }).help('\tprint program version and exit')
+    .shortBeat('h', function() { this.printHelp(); process.exit(0); })
+      .help('\tprint this message and exit')
+    .shortBeat('v', function() { console.log('1.0'); process.exit(0); })
+      .help('\tprint program version and exit')
     .parse();
 /* that's it. */
 ```
