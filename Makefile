@@ -4,7 +4,7 @@ cwd := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 TARGET := deps lint style ugly
 
 # source code
-DOC = $(wildcard ${rootdir}/doc/*.m4)
+DOC = $(wildcard ${rootdir}/src/*.m4)
 SRC = $(wildcard ${rootdir}/src/*.js)
 EXT = package.json LICENSE
 
