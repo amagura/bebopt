@@ -86,7 +86,6 @@ function gatherArgs() {
   ];
 }
 
-
 function Bebopt(app) {
   this.app = app ||
     (process.argv.length === 1) ? 'node' : basename(process.argv[1]);
