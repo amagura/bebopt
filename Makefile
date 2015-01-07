@@ -5,7 +5,7 @@ cwd := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 
 # source code
 DOC = $(wildcard $(mydir)/src/*.m4)
-SRC = $(wildcard $(mydir)/src/*.js)
+SRC = $(wildcard $(filter-out %.min.js $(mydir)/src/*.js))
 EXT = package.json LICENSE
 
 # compilers/tools
