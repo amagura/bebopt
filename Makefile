@@ -1,55 +1,58 @@
 # convenience variables
-rootdir := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
+mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
+mydir := $(abspath $(lastword $(dir $(MAKEFILE_LIST))))
 cwd := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
-TARGET := deps lint style ugly
 
 # source code
-DOC = $(wildcard ${rootdir}/src/*.m4)
-SRC = $(wildcard ${rootdir}/src/*.js)
+DOC = $(wildcard $(mydir)/src/*.m4)
+SRC = $(wildcard $(mydir)/src/*.js)
 EXT = package.json LICENSE
 
 # compilers/tools
 node := /usr/bin/env node
 m4 := /usr/bin/env m4
 npm := /usr/bin/env npm
-coffee := ${rootdir}/node_modules/coffee-script/bin/coffee
-coffeelint := ${rootdir}/node_modules/coffeelint/bin/coffeelint
-uglify := ${rootdir}/node_modules/uglify-js/bin/uglifyjs
+coffee := $(mydir)/node_modules/coffee-script/bin/coffee
+coffeelint := $(mydir)/node_modules/coffeelint/bin/coffeelint
+uglify := $(mydir)/node_modules/uglify-js/bin/uglifyjs
 
-.PHONY: clean release all
+SUBDIRS = src
+
+.PHONY: clean release all doc
 all: deps ugly
 
 deps:
-	cd ${rootdir}; ${npm} install
-	touch deps
+	cd $(mydir); $(npm) install
+	@touch deps
 
 doc:
-	$(foreach d,$(DOC),${m4} $(d) ${rootdir}/wiki/$(d:.m4=.md);)
+	$(foreach d,$(DOC),$(m4) $(d) $(rootdir)/wiki/$(d:.m4=.md);)
 
 lint: style
-	touch lint
+	@touch lint
 
 style:
 	$(foreach f,$(SRC),sed -ri 's/\s+$$//' $(f);)
-	touch style
+	@touch style
 
 ugly: deps
-	$(foreach f,$(SRC),${uglify} $(f) > $(f:.js=.min.js);)
-	touch ugly
+	$(foreach f,$(SRC),$(uglify) $(f) > $(f:.js=.min.js);)
+	@touch ugly
 
 clean:
 	$(foreach f,$(SRC:.js=.min.js),$(RM) $(f);)
-	$(foreach t,$(TARGET),$(RM) $(t);)
+	$(foreach t,deps ugly style,$(RM) $(t);)
 
 release: deps ugly
-	sed -i '1s/src/lib/' $(
-	tar cf bebopt.tar $(SRC) $(EXT)
-	sed -i 's/index/index.min/' package.json
-	tar czf bebopt.min.tar.gz $(SRC:.js=.min.js) $(EXT)
-	sed -i 's/index[.]min/index/' package.json
-	git checkout void
-	git clean -e bebopt.tar -e bebopt.min.tar.gz -f
-	tar xf bebopt.tar
-	git add package.json LICENSE index.js lib
-	$(RM) -r node_modules
-	git clean -e bebopt.min.tar.gz -f
+	cd $(mydir); \
+	  sed -i '1s/src/lib/' $(filter index%, $(SRC)); \
+	  tar cf bebopt.tar $(SRC) $(EXT); \
+	  sed -i 's/index/index.min/' package.json; \
+	  tar czf bebopt.min.tar.gz $(SRC:.js=.min.js) $(EXT); \
+	  sed -i 's/index[.]min/index/' package.json; \
+	  git checkout void; \
+	  git clean -e bebopt.tar -e bebopt.min.tar.gz -f; \
+	  tar xf bebopt.tar; \
+	  git add package.json LICENSE index.js lib; \
+	  $(RM) -r node_modules; \
+	  git clean -e bebopt.min.tar.gz -f
