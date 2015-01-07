@@ -1,9 +1,7 @@
 # API (v0.2)
-changequote(``'', ```''')
-define(`'WIKI``'', `'https://github.com/amagura/bebopt/wiki``'')
 
 ### Index
-* [Public Methods](https://github.com/amagura/bebopt/wiki/API#public-methods)
+* [Public Methods](WIKI(API#public-methods))
 
 ---
 
@@ -11,7 +9,7 @@ define(`'WIKI``'', `'https://github.com/amagura/bebopt/wiki``'')
 All public methods are guaranteed to return a reference to `this`, or raise an exception on misuse.
 
 ## .usage(string)
-> Sets the usage-string printed by [printHelp]( to `string`; it is the first thing printed by [printHelp](https://github.com/amagura/bebopt/wiki/API#printHelp)
+> Sets the usage-string printed by [printHelp]( to `string`; it is the first thing printed by [printHelp](WIKI(API#printHelp))
 
 #### Example:
 ```javascript

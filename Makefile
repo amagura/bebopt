@@ -4,7 +4,8 @@ mydir := $(abspath $(lastword $(dir $(MAKEFILE_LIST))))
 cwd := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 
 # source code
-DOC = $(wildcard $(mydir)/src/*.m4)
+DOC = $(filter-out main.m4, $(wildcard $(mydir)/src/*.m4))
+MAIN_M4 = $(filter main.m4, $(wildcard $(mydir)/src/*.m4))
 SRC = $(filter-out %.min.js, $(wildcard $(mydir)/src/*.js))
 EXT = package.json LICENSE
 
@@ -18,7 +19,7 @@ uglify := $(mydir)/node_modules/uglify-js/bin/uglifyjs
 
 SUBDIRS = src
 
-.PHONY: clean release all doc
+.PHONY: clean release all
 all: deps ugly
 
 deps:
@@ -26,7 +27,11 @@ deps:
 	@touch deps
 
 doc:
-	$(foreach d,$(DOC),$(m4) $(d) $(rootdir)/wiki/$(d:.m4=.md);)
+	$(foreach d,$(DOC),$(m4) $(MAIN_M4) $(d) > $(d:.m4=.md);)
+	@touch doc
+
+publish: doc
+	$(foreach d,$(DOC:.m4=.md),mv $(d) $(mydir)/wiki;)
 
 lint: style
 	@touch lint
