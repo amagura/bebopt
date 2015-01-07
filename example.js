@@ -3,6 +3,7 @@ var Bebopt = new (require('./index'))
   ;
 
 var argv = Bebopt
+  .usage('hello')
   .longOption('help::', function() {
     this.printHelp();
     process.exit(0);
