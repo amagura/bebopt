@@ -40,7 +40,6 @@ ugly: deps
 	@touch ugly
 
 clean:
-	echo $(SRC)
 	$(foreach f,$(SRC:.js=.min.js),$(RM) $(f);)
 	$(foreach t,deps ugly style,$(RM) $(t);)
 
