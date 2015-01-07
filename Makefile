@@ -5,7 +5,7 @@ cwd := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 
 # source code
 DOC = $(wildcard $(mydir)/src/*.m4)
-SRC = $(wildcard $(filter-out %.min.js, $(mydir)/src/*.js))
+SRC = $(filter-out %.min.js, $(wildcard $(mydir)/src/*.js))
 EXT = package.json LICENSE
 
 # compilers/tools
@@ -40,6 +40,7 @@ ugly: deps
 	@touch ugly
 
 clean:
+	echo $(SRC)
 	$(foreach f,$(SRC:.js=.min.js),$(RM) $(f);)
 	$(foreach t,deps ugly style,$(RM) $(t);)
 
