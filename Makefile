@@ -10,6 +10,7 @@ EXT = package.json LICENSE
 
 # compilers/tools
 node := /usr/bin/env node
+m4 := /usr/bin/env m4
 npm := /usr/bin/env npm
 coffee := ${rootdir}/node_modules/coffee-script/bin/coffee
 coffeelint := ${rootdir}/node_modules/coffeelint/bin/coffeelint
@@ -21,6 +22,9 @@ all: deps ugly
 deps:
 	cd ${rootdir}; ${npm} install
 	touch deps
+
+doc:
+	$(foreach d,$(DOC),${m4} $(d) ${rootdir}/wiki/$(d:.m4=.md);)
 
 lint: style
 	touch lint
