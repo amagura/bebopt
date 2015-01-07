@@ -46,7 +46,7 @@ ugly: deps
 
 clean:
 	$(foreach f,$(SRC:.js=.min.js),$(RM) $(f);)
-	$(foreach f,$(DOC:.m4=md),$(RM) $(f);)
+	$(foreach f,$(DOC:.m4=.md),$(RM) $(f);)
 	$(foreach t,deps ugly style,$(RM) $(t);)
 
 release: deps ugly
