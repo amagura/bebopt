@@ -1,4 +1,5 @@
 *.min.js
+/wiki
 
 # Dependency directory
 # Commenting this out is preferred by some people, see
