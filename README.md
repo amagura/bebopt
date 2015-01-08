@@ -1,4 +1,4 @@
-# Bebopt [![Build Status](https://travis-ci.org/amagura/bebopt.svg?branch=master)](https://travis-ci.org/amagura/bebopt)
+# Bebopt [![Build Status](https://travis-ci.org/amagura/bebopt.svg?branch=develop)](https://travis-ci.org/amagura/bebopt)
 a more powerful option parser for node.js
 
 # Why another option parser?
