@@ -11,6 +11,7 @@ EXT = package.json LICENSE
 # compilers/tools
 node := /usr/bin/env node
 m4 := /usr/bin/env m4
+markdown := /usr/bin/env markdown
 npm := /usr/bin/env npm
 coffee := $(mydir)/node_modules/coffee-script/bin/coffee
 coffeelint := $(mydir)/node_modules/coffeelint/bin/coffeelint
@@ -18,7 +19,7 @@ uglify := $(mydir)/node_modules/uglify-js/bin/uglifyjs
 
 SUBDIRS = src
 
-.PHONY: clean release all doc publish
+.PHONY: clean release all doc publish expand-doc
 all: doc
 
 build: deps ugly test
@@ -29,12 +30,15 @@ deps:
 	cd $(mydir); $(npm) install
 	@touch deps
 
-doc:
-	echo $(DOC)
-	echo $(MAIN_M4)
-	$(foreach d,$(DOC),$(m4) $(d) > $(d:.m4=.md);)
+%.md : %.m4
+	$(m4) -I $(mydir)/src -P $< > $@
 
-publish: doc
+doc: $(DOC:.m4=.md)
+
+expand-doc: $(DOC:.m4=.md)
+	$(foreach d,$(DOC),$(markdown) $(d:.m4=.md) > $(d:.m4=.html);)
+
+publish: $(DOC:.m4=.md)
 	$(foreach d,$(DOC:.m4=.md),mv $(d) $(mydir)/wiki;)
 
 lint: style
@@ -44,9 +48,10 @@ style:
 	$(foreach f,$(SRC),sed -ri 's/\s+$$//' $(f);)
 	@touch style
 
-ugly: deps
-	$(foreach f,$(SRC),$(uglify) $(f) > $(f:.js=.min.js);)
-	@touch ugly
+ugly: $(SRC:.js=.min.js)
+
+%.min.js : %.js
+	$(uglify) $< > $@
 
 clean:
 	$(foreach f,$(SRC:.js=.min.js),$(RM) $(f);)
