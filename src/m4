@@ -1,4 +1,7 @@
 m4_changequote(`\{', `\}')m4_dnl
 m4_changecom(\{<!--\}, \{-->\})m4_dnl
 m4_define(\{WIKI\}, \{m4_ifelse(\{$1\}, \{\}, \{https://github.com/amagura/bebopt/wiki\}, \{https://github.com/amagura/bebopt/wiki/$1\})\})m4_dnl
+m4_define(\{BEBOP_START\}, \{var argv = new Bebopt
+  .usage('hello')\})
+m4_define(\{BEBOP_DEF\}, \{.define('h', '\tfoo', function(){})\})
 m4_dnl vim:ft=m4:

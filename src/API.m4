@@ -20,12 +20,11 @@ Sets the usage-string printed by [printHelp](WIKI(API#printHelp)) to `string`; i
 
 #### Example:
 ```javascript
-var argv = Bebopt
-  .usage('hello')
+BEBOP_START
   .define('h', '\tprint this message and exit', function() {
       this.printHelp();
       process.exit(0);
-  }).parse(['-h']);
+  })BEBOP_END(['-h']);
 ```
 #### Output:
 ```
@@ -46,10 +45,9 @@ The hash returned by `.parse` is of the form:
 }
 ```
 &nbsp;
-> Example 1:
+#### Example 1:
 ```javascript
-var argv = Bebopt
-  .usage('hello')
+BEBOP_START
   .define('h:', '\tfoo', function(){}) // `-h' takes a required arg
   .parse([
     '-h',
@@ -58,15 +56,15 @@ var argv = Bebopt
 console.log(argv);
 ```
 &nbsp;
-> Output:
+#### Output:
 ```javascript
 // the callback didn't return anything: making `after' undefined.
 { h: { before: 'bar', after: undefined }}
 ```
 &nbsp;
-> Example 2:
+#### Example 2:
 ```javascript
-var argv = Bebopt
+BEBOP_START
   .usage('hello')
   .define('h:', '\tfoo', function(){ return true; })
   .parse([
@@ -76,7 +74,7 @@ var argv = Bebopt
 console.log(argv);
 ```
 &nbsp;
-> Output:
+#### Output:
 ```javascript
 // the callback returned `true'.
 { h: { before: 'bar', after: true }}
@@ -110,3 +108,15 @@ defines alias options for option _keys_.
 A _key_ may have multiple _aliases_, but an _alias_ cannot be assigned to more than one _key_.
 
 If _keys_ is an array, then _aliases_ should also be an array of equal length, and their contents should occur pairwise. (i.e. `aliases[n]` is assigned to `keys[n]`)
+
+#### Example:
+```javascript
+BEBOP_START
+  BEBOP_DEF
+  .alias('help', 'h')
+  .parse(['--help'])
+```
+#### Output:
+```
+foo
+```
