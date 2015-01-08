@@ -17,10 +17,12 @@ limitations under the License.
 ***/
 'use strict';
 
-var clone     = require('clone')
+var util = require('util')
+  , clone     = require('clone')
   , basename  = require('path').basename
   ;
 
+// functions that don't need to be part of the Bebopt object >>>1
 function separateOptionsFromArgs(opt) {
   var arg, _opt;
   if (/=/.test(opt))
@@ -32,6 +34,10 @@ function separateOptionsFromArgs(opt) {
     opt: _opt,
     arg: arg
   };
+}
+
+function sanitizeContext(cb) {
+  cb.apply(self, []);
 }
 
 function makeOption(name) {
@@ -57,12 +63,14 @@ function makeOption(name) {
   };
 }
 
-function gatherArgs() {
+function gatherArgs(args) {
   var optend = false
     , args = []
     , opts = []
+    , argv = args ||
+      (process.argv.length === 1 ? process.argv.slice(1) : process.argv.slice(2))
     ;
-  process.argv.slice(2).forEach(function(arg, ind, arr) {
+  argv.forEach(function(arg, ind, arr) {
     if (/^--$/.test(arg))
       optend = true;
     else
@@ -85,6 +93,44 @@ function gatherArgs() {
     opts
   ];
 }
+
+function log(obj) { // XXX for debugging only
+  console.log(util.inspect(obj, { colors: true, depth: null }));
+}
+
+function runCallbacks(parent) {
+  var self = this
+    , arg
+    ;
+
+  parent._cooked.forEach(function(option) {
+    arg = option.cb.apply(self, [ option.arg ]);
+    parent._results[option.name] = {
+      before: option.arg, // arg before Cb
+      after: arg // arg after Cb
+    };
+  });
+  return parent._results;
+}
+
+// <<<1
+
+function SanitaryContext() {
+  this.usage = this.usage === null ? undefined : this.usage;
+  this.app;
+  this.help;
+  this.log = log;
+}
+
+SanitaryContext.prototype.printHelp = function(cb) {
+  var self = this
+    , cb = (cb === undefined ? console.error : cb)
+    , usage = (self.usage === undefined ? 'Usage: ' + self.app.toString() : self.usage)
+    ;
+
+  cb(usage);
+  self.help.forEach(function(txt) { cb(txt); });
+};
 
 function Bebopt(app) {
   this.app = app ||
@@ -238,18 +284,6 @@ Bebopt.prototype._makeHelp = function() {
   });
 };
 
-Bebopt.prototype.printHelp = function(fn) {
-  var self = this
-    , fn = (fn === undefined ? console.error : fn)
-    , usage = (self._usage === undefined ? 'Usage: ' + self.app.toString() : self._usage)
-    ;
-  
-  fn(usage);
-  self._help.forEach(function(txt) {
-    fn(txt);
-  });
-};
-
 // sep -> separate
 Bebopt.prototype._catchSpaceDelimArgs = function(opt, list) {
   var self = this
@@ -343,10 +377,10 @@ Bebopt.prototype._takesArg = function(opt, listName) {
     return false;
 };
 
-Bebopt.prototype._resolveOpts = function() {
+Bebopt.prototype._resolveOpts = function(args, opts) {
   var self = this;
-  self._splitCombinedShorts();
-  self._opts.forEach(function(elem) {
+  opts = self._splitCombinedShorts(opts);
+  opts.forEach(function(elem) {
     var dashes = elem.arg.replace(/^(--?).*/, '$1').length; // number of dashes
     elem.arg = elem.arg.replace(/^--?(.*)/, '$1');
     [
@@ -363,6 +397,7 @@ Bebopt.prototype._resolveOpts = function() {
       }
     });
   });
+  self._eaten['_'] = args;
 };
 
 Bebopt.prototype._bindOptToList = function(opt, listName) {
@@ -397,37 +432,19 @@ Bebopt.prototype._bindOptToList = function(opt, listName) {
   }
 };
 
-Bebopt.prototype._runCallbacks = function(context) {
-  var self = this
-    , arg = null
-    ;
-  this._cooked.forEach(function(option) {
-    arg = option.cb.apply(context, [ option.arg ]);
-    self._results[option.name] = arg;
-    if (option.child !== null) // FIXME this probably will clobber stuff
-      self._results[option.child.name] = arg;
-    if (option.parent !== null) // FIXME this will probably clobber stuff
-      self._results[option.parent.name] = arg;
-  });
-};
-
-Bebopt.prototype._makeCleanContext = function() {
-  var self = this
-    , context = clone(self)
-    ;
-  Object.keys(context).forEach(function(key) {
-    if (self._safeContext.indexOf(key) === -1)
-      delete context[key];
-  });
-  return context;
-};
-
-Bebopt.prototype.parse = function() {
+Bebopt.prototype.parse = function(args) {
   this._makeHelp();
-  this._resolveOpts(gatherArgs());
-  var context = this._makeCleanContext();
-  this._runCallbacks(context);
-  return this._results;
+  this._resolveOpts(gatherArgs(args));
+  var SC = new SanitaryContext.apply({
+    help: this._help,
+    app: this.app,
+    usage: this._usage
+  }, []);
+  runCallbacks.apply(SC, [{
+    _cooked: this._cooked,
+    _results: this._results
+  }]);
+  log(this);
 };
 
 module.exports = Bebopt;

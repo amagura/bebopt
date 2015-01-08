@@ -4,8 +4,7 @@ mydir := $(abspath $(lastword $(dir $(MAKEFILE_LIST))))
 cwd := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 
 # source code
-DOC = $(filter-out main.m4, $(wildcard $(mydir)/src/*.m4))
-MAIN_M4 = $(filter main.m4, $(wildcard $(mydir)/src/*.m4))
+DOC := $(wildcard $(mydir)/src/*.m4)
 SRC = $(filter-out %.min.js, $(wildcard $(mydir)/src/*.js))
 EXT = package.json LICENSE
 
@@ -19,16 +18,21 @@ uglify := $(mydir)/node_modules/uglify-js/bin/uglifyjs
 
 SUBDIRS = src
 
-.PHONY: clean release all
-all: deps ugly
+.PHONY: clean release all doc publish
+all: doc
+
+build: deps ugly test
+
+test:
 
 deps:
 	cd $(mydir); $(npm) install
 	@touch deps
 
 doc:
-	$(foreach d,$(DOC),$(m4) $(MAIN_M4) $(d) > $(d:.m4=.md);)
-	@touch doc
+	echo $(DOC)
+	echo $(MAIN_M4)
+	$(foreach d,$(DOC),$(m4) $(d) > $(d:.m4=.md);)
 
 publish: doc
 	$(foreach d,$(DOC:.m4=.md),mv $(d) $(mydir)/wiki;)
@@ -47,7 +51,7 @@ ugly: deps
 clean:
 	$(foreach f,$(SRC:.js=.min.js),$(RM) $(f);)
 	$(foreach f,$(DOC:.m4=.md),$(RM) $(f);)
-	$(foreach t,deps ugly style,$(RM) $(t);)
+	$(foreach t,deps ugly style doc,$(RM) $(t);)
 
 release: deps ugly
 	cd $(mydir); \
