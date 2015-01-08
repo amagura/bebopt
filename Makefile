@@ -11,7 +11,6 @@ EXT = package.json LICENSE
 # compilers/tools
 node := /usr/bin/env node
 m4 := /usr/bin/env m4
-markdown := /usr/bin/env markdown
 npm := /usr/bin/env npm
 coffee := $(mydir)/node_modules/coffee-script/bin/coffee
 coffeelint := $(mydir)/node_modules/coffeelint/bin/coffeelint
@@ -20,7 +19,7 @@ uglify := $(mydir)/node_modules/uglify-js/bin/uglifyjs
 SUBDIRS = src
 
 .PHONY: clean release all doc publish expand-doc
-all: doc
+all: build doc
 
 build: deps ugly test
 
@@ -34,9 +33,6 @@ deps:
 	$(m4) -I $(mydir)/src -P $< > $@
 
 doc: $(DOC:.m4=.md)
-
-expand-doc: $(DOC:.m4=.md)
-	$(foreach d,$(DOC),$(markdown) $(d:.m4=.md) > $(d:.m4=.html);)
 
 publish: $(DOC:.m4=.md)
 	$(foreach d,$(DOC:.m4=.md),mv $(d) $(mydir)/wiki;)
@@ -56,6 +52,7 @@ ugly: $(SRC:.js=.min.js)
 clean:
 	$(foreach f,$(SRC:.js=.min.js),$(RM) $(f);)
 	$(foreach f,$(DOC:.m4=.md),$(RM) $(f);)
+	$(foreach f,$(DOC:.m4=.html),$(RM) $(f);)
 	$(foreach t,deps ugly style doc,$(RM) $(t);)
 
 release: deps ugly
