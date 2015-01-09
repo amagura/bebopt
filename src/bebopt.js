@@ -43,7 +43,7 @@ function sanitizeContext(cb) {
 function makeOption(name) {
   var new_op = name.replace(/^.*?([:]*)$/, '$1')
     , new_name = name.replace(/^(.*?)[:]*$/, '$1')
-    , op = null
+    , op
     ;
 
   switch (new_op) {
@@ -58,7 +58,7 @@ function makeOption(name) {
       break;
   }
   return {
-    op: op,
+    type: op,
     name : new_name
   };
 }
@@ -138,8 +138,8 @@ function Bebopt(app) {
   this._usage = 'Usage: ' + this.app.toString();
   this._long = {};
   this._short = {};
-  this._children = {};
   this._help = [];
+  this.help = [];
   this._safeContext = [
     '_usage',
     'printHelp',
@@ -155,7 +155,7 @@ Bebopt.prototype.define = function(_name, help, cb) {
   var list = _name.length > 1 ? 'long' : 'short'
     , optInfo = makeOption(_name)
     , name = optInfo.name
-    , type = optInfo.opt
+    , type = optInfo.type
     ;
 
   if (!(cb instanceof Function) && !(help instanceof Function)) {
@@ -197,15 +197,15 @@ Bebopt.prototype.define = function(_name, help, cb) {
   }
 
   if (typeof cb === 'string') {
-    _defineOption.apply(this, [ name, type, help, cb ]);
-  } else {
     _defineOption.apply(this, [ name, type, cb, help ]);
+  } else {
+    _defineOption.apply(this, [ name, type, help, cb ]);
   }
   return this;
 };
 
 /* parentName -> keys, childName -> aliases */
-Bebopt.prototype.alias = function(parentName, childName) {
+Bebopt.prototype.alias = function(childName, parentName) {
   var self = this
     , parents = []
     , children = []
@@ -250,17 +250,18 @@ Bebopt.prototype.alias = function(parentName, childName) {
   if (childName instanceof Array) {
     if (parentName instanceof Array) {
       children.forEach(function(child, ind) {
-        self._children[child.name] = child;
-        parents[ind].child.push(Object.keys(self._children).indexOf(child.name));
+        var parentList = parents[ind].name.length > 1 ? 'long' : 'short';
+        self['_' + parentList][parents[ind].name].child.push(child);
       });
     } else {
       children.forEach(function(child) {
-        self._children[child.name] = child;
-        parents[0].child.push(Object.keys(self._children).indexOf(child.name));
+        var parentList = parents[0].name.length > 1 ? 'long' : 'short';
+        self['_' + parentList][parents[0].name].child.push(child);
       });
     }
   } else {
-    self._children[children[0].name] = children[0];
+    var parentList = parents[0].name.length > 1 ? 'long' : 'short';
+    self['_' + parentList][parents[0].name].child.push(children[0]);
   }
   return this;
 };
@@ -271,21 +272,61 @@ Bebopt.prototype.usage = function(text) {
 };
 
 Bebopt.prototype._makeHelp = function() {
-  var self = this;
-  this._options.forEach(function(opt) {
-    var dashes = (opt.list === 'short') ? '-' : '--'
-      , usage = self._parentOrChildUsage(opt);
-    if (opt.parent === null) {
-      if (opt.child === null) {
-        self._help.push('  ' + dashes + opt.name + usage);
+  var self = this
+    , text
+    ;
+  function _addChildren(helpObj, ctl) {
+      var _long, _short, text;
+      text = [];
+
+      if (ctl === undefined || ctl === false) {
+        _short = helpObj.child
+        .filter(function(child) {
+          return child.list === 'short';
+        });
+        _short.forEach(function(child) {
+          text.push('-' + child.name);
+        });
+      } else if (ctl === undefined || ctl === true) {
+        _long = helpObj.child
+        .filter(function(child) {
+          return child.list === 'long';
+        });
+
+        _long.forEach(function(child) {
+          text.push('--' + child.name);
+        });
+      }
+    return text;
+  }
+
+  this._help.forEach(function(helpObj) {
+    text = '  ';
+    if (helpObj.list === 'short') {
+      text += helpObj.name;
+      if (helpObj.child.length > 0) {
+        _addChildren(helpObj).forEach(function(txt) {
+          text += ', ' + txt;
+        });
+      }
+    } else {
+      if (helpObj.child.length > 0) {
+        _addChildren(helpObj, false).forEach(function(txt) {
+          text += txt + ', ';
+        });
+
+        text += helpObj.name
+
+        _addChildren(helpObj, true).forEach(function(txt) {
+          text += ', ' + txt;
+        });
       } else {
-        if (dashes === '--')
-          self._help.push('  -' + opt.child.name + ', ' + dashes + opt.name + usage);
-        else
-          self._help.push('  ' + dashes + opt.name + ', --' + opt.child.name + usage);
+        text += helpObj.name;
       }
     }
+    self.help.push(text);
   });
+  delete self._help;
 };
 
 // sep -> separate

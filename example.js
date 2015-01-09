@@ -12,6 +12,7 @@ var argv = Bebopt
     console.log('1.0');
     process.exit(0);
   }).alias('v', 'version')
+  .alias('ver', 'version')
   .define('x', '\t\tblah', function() {
     this.log(this);
   })
