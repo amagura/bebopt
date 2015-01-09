@@ -113,7 +113,6 @@ function runCallbacks(parent) {
   return parent._results;
 }
 
-// <<<1
 
 function SanitaryContext() {
   this.usage = this.usage === null ? undefined : this.usage;
@@ -132,6 +131,7 @@ SanitaryContext.prototype.printHelp = function(cb) {
   self.help.forEach(function(txt) { cb(txt); });
 };
 
+// <<<1
 function Bebopt(app) {
   this.app = app ||
     (process.argv.length === 1) ? 'node' : basename(process.argv[1]);
@@ -152,7 +152,7 @@ function Bebopt(app) {
 }
 
 Bebopt.prototype.define = function(_name, help, cb) {
-  var list = name.length > 1 ? 'long' : 'short'
+  var list = _name.length > 1 ? 'long' : 'short'
     , optInfo = makeOption(_name)
     , name = optInfo.name
     , type = optInfo.opt
@@ -165,7 +165,7 @@ Bebopt.prototype.define = function(_name, help, cb) {
     var err = 'Bebopt: no help string found';
     throw new Error(err);
   }
-  
+
   function _defineOption(name, type, text, cb) {
     var list = name.length > 1 ? 'long' : 'short'
       , index = Object.keys(this['_' + list]).length
@@ -179,15 +179,16 @@ Bebopt.prototype.define = function(_name, help, cb) {
       index: index
     };
 
-    _defineHelp.apply(this, [ this['_' + list][name], text ]);
+    _defineHelp.apply(this, [ name, this['_' + list][name], text ]);
   }
 
-  function _defineHelp(name, text) {
-    var list = name.length > 1 ? 'long' : 'short'
+  function _defineHelp(name, optObj, text) {
+    var self = this
+      , list = name.length > 1 ? 'long' : 'short'
       , helpObj = {
-      text: text,
-      child: this['_' + list][name].child
-    };
+        text: text,
+        child: optObj.child
+      };
     helpObj.list = list;
     helpObj.name = name.length > 1 ? '--' : '-';
     helpObj.name += name;
@@ -199,6 +200,7 @@ Bebopt.prototype.define = function(_name, help, cb) {
   } else {
     _defineOption.apply(this, [ name, type, cb, help ]);
   }
+  return this;
 };
 
 /* parentName -> keys, childName -> aliases */
