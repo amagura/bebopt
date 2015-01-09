@@ -172,6 +172,7 @@ Bebopt.prototype.define = function(_name, help, cb) {
       ;
 
     this['_' + list][name] = {
+      name: name,
       cb: cb,
       type: type,
       child: [],
@@ -179,19 +180,19 @@ Bebopt.prototype.define = function(_name, help, cb) {
       index: index
     };
 
-    _defineHelp.apply(this, [ name, this['_' + list][name], text ]);
+    _defineHelp.apply(this, [this['_' + list][name], text]);
   }
 
-  function _defineHelp(name, optObj, text) {
+  function _defineHelp(optObj, text) {
     var self = this
-      , list = name.length > 1 ? 'long' : 'short'
+      , list = optObj.name.length > 1 ? 'long' : 'short'
       , helpObj = {
         text: text,
         child: optObj.child
       };
     helpObj.list = list;
-    helpObj.name = name.length > 1 ? '--' : '-';
-    helpObj.name += name;
+    helpObj.name = optObj.name.length > 1 ? '--' : '-';
+    helpObj.name += optObj.name;
     this._help.push(helpObj);
   }
 
@@ -227,11 +228,11 @@ Bebopt.prototype.alias = function(parentName, childName) {
       parents.push(self['_' + list][optname]);
     });
   } else {
-    var list = optname.length > 1 ? 'long' : 'short'
+    var list = parentName.length > 1 ? 'long' : 'short'
     parents.push(self['_' + list][parentName]);
   }
 
-  var list = cname.length > 1 ? 'long' : 'short';
+  var list = childName.length > 1 ? 'long' : 'short';
   if (childName instanceof Array) {
     childName.forEach(function(cname) {
       children.push({
@@ -261,6 +262,7 @@ Bebopt.prototype.alias = function(parentName, childName) {
   } else {
     self._children[children[0].name] = children[0];
   }
+  return this;
 };
 
 Bebopt.prototype.usage = function(text) {
