@@ -7,12 +7,11 @@ var argv = Bebopt
   .define('help::', '\tprint this message and exit', function() {
     this.printHelp();
     process.exit(0);
-  }).alias('h', 'help')
+  }).alias('h')
   .define('version', '\tprint program version and exit', function() {
     console.log('1.0');
     process.exit(0);
-  }).alias('v', 'version')
-  .alias('ver', 'version')
+  }).alias('v', 'ver')
   .define('x', '\t\tblah', function() {
     this.log(this);
   })

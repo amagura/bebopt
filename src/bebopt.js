@@ -140,15 +140,7 @@ function Bebopt(app) {
   this._short = {};
   this._help = [];
   this.help = [];
-  this._safeContext = [
-    '_usage',
-    'printHelp',
-    '_help',
-    '_cooked',
-    '_eaten',
-    '_log',
-    'app'
-  ];
+  this._parent = null;
 }
 
 Bebopt.prototype.define = function(_name, help, cb) {
@@ -181,6 +173,7 @@ Bebopt.prototype.define = function(_name, help, cb) {
     };
 
     _defineHelp.apply(this, [this['_' + list][name], text]);
+    return this['_' + list][name];
   }
 
   function _defineHelp(optObj, text) {
@@ -197,72 +190,35 @@ Bebopt.prototype.define = function(_name, help, cb) {
   }
 
   if (typeof cb === 'string') {
-    _defineOption.apply(this, [ name, type, cb, help ]);
+    this._parent = _defineOption.apply(this, [ name, type, cb, help ]);
   } else {
-    _defineOption.apply(this, [ name, type, help, cb ]);
+    this._parent = _defineOption.apply(this, [ name, type, help, cb ]);
   }
   return this;
 };
 
-/* parentName -> keys, childName -> aliases */
-Bebopt.prototype.alias = function(childName, parentName) {
+Bebopt.prototype.alias = function() {
   var self = this
-    , parents = []
-    , children = []
-    ;
+    , aliases = (arguments.length > 0 && arguments.length < 2
+                ? [arguments[0]]
+                : Array.apply(null, arguments));
 
-  if (parentName instanceof Array && childName instanceof Array) {
-    if (childName.length !== parentName.length) {
-      var err = 'Bebopt: unbalanced keys or aliases: arrays differ in length';
-      throw new Error(err);
-    }
-  } else if (parentName instanceof Array && !(childName instanceof Array)) {
-    var err = 'Bebopt: an alias cannot belong to multiple keys';
+  if (self._parent === null || self._parent === undefined) {
+    var err = 'Bebopt: call to define must precede';
+    throw new Error(err);
+  } else if (!(aliases instanceof Array)) {
+    var err = 'Bebopt: no aliases found';
     throw new Error(err);
   }
 
-  if (parentName instanceof Array) {
-    parentName.forEach(function(optname) {
-      var list = optname.length > 1 ? 'long' : 'short'
-        ;
-      parents.push(self['_' + list][optname]);
-    });
-  } else {
-    var list = parentName.length > 1 ? 'long' : 'short'
-    parents.push(self['_' + list][parentName]);
-  }
-
-  var list = childName.length > 1 ? 'long' : 'short';
-  if (childName instanceof Array) {
-    childName.forEach(function(cname) {
-      children.push({
-        name: cname,
-        list: list
-      });
-    });
-  } else {
-    children.push({
-      name: childName,
+  aliases.forEach(function(aname) {
+    var list = aname.length > 1 ? 'long' : 'short';
+    self._parent.child.push({
+      name: aname,
       list: list
     });
-  }
-
-  if (childName instanceof Array) {
-    if (parentName instanceof Array) {
-      children.forEach(function(child, ind) {
-        var parentList = parents[ind].name.length > 1 ? 'long' : 'short';
-        self['_' + parentList][parents[ind].name].child.push(child);
-      });
-    } else {
-      children.forEach(function(child) {
-        var parentList = parents[0].name.length > 1 ? 'long' : 'short';
-        self['_' + parentList][parents[0].name].child.push(child);
-      });
-    }
-  } else {
-    var parentList = parents[0].name.length > 1 ? 'long' : 'short';
-    self['_' + parentList][parents[0].name].child.push(children[0]);
-  }
+  });
+  self._parent = null;
   return this;
 };
 
