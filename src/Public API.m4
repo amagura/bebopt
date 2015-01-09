@@ -1,6 +1,6 @@
 m4_dnl vim:ft=markdown:
 m4_include(m4)m4_dnl
-# Version 0.2
+# VERSION
 
 ### Index
 * [Public Methods](WIKI(API#public-methods))

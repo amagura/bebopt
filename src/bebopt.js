@@ -63,6 +63,93 @@ function makeOption(name) {
   };
 }
 
+function syncIndexes(arr, threshold) {
+  arr.forEach(function(elem) {
+    elem.index >= threshold && ++elem.index;
+  });
+  return arr;
+}
+
+function filterNull(map) {
+  var arr;
+  arr = (map instanceof Array
+        ? map : Object.keys(map));
+
+  return arr.filter(function(elem) {
+    if (map instanceof Array)
+      return elem !== null;
+    else
+      return map[elem] !== null;
+  });
+}
+
+function catchSpaceDelimArgs(cli, args, list) {
+  var option = getOption.apply(this, [ cli, list ]);
+
+  if (option.type !== 'flag' && cli.optarg === undefined) {
+    args.forEach(function(nonOpt, ind) {
+      if (nonOpt.index === (cli.index + 1)) {
+        cli.optarg = nonOpt.arg;
+        args[ind] = null;
+      }
+    });
+    args = filterNull(args);
+  }
+  return [ cli, args ];
+}
+
+function splitCombinedShorts(args, opts) {
+  var dashes
+    ;
+
+  opts.forEach(function(elem, ind) {
+    dashes = elem.arg.replace(/^(--?).*/, '$1').length;
+    if (dashes === 1) {
+      var options = elem.arg.replace(/^-(.*)/, '$1').split('');
+      options = options.reverse();
+      elem.arg = options.pop();
+
+      while (options.length > 0) {
+        new_elem = clone(elem);
+        new_elem.arg = options.pop();
+        if (args[new_elem.index] !== undefined) {
+          args = syncIndexes(args, new_elem.index);
+        }
+        opts = syncIndexes(opts, new_elem.index++);
+        opts.push(new_elem);
+      }
+    }
+  });
+  return [ args, opts ];
+}
+
+function getOption(cli, list) {
+  var self = this
+    , option = Object.keys(this._long).filter(function(memb) {
+    if (cli.arg === memb.name && list === memb.list)
+      return memb;
+  });
+
+  if (option.length === 0) {
+    var err = self.app.toString() + ': ';
+    if (list === 'short')
+      err += 'invalid option -- \'';
+    else
+      err += 'unrecognized option \'--';
+    err += cli.arg + '\'';
+    console.error(err);
+    process.exit(1);
+  }
+  return option[0];
+}
+
+function takesArg(cli, list) {
+  var self = this
+    , option = getOption.apply(this, [ cli, list ])
+    ;
+  return option.type !== 'flag';
+}
+
 function gatherArgs(args) {
   var optend = false
     , args = []
@@ -285,53 +372,6 @@ Bebopt.prototype._makeHelp = function() {
   delete self._help;
 };
 
-// sep -> separate
-Bebopt.prototype._catchSpaceDelimArgs = function(opt, list) {
-  var self = this
-    , type = this._getOption(opt, list).type
-    ;
-  if (type !== 'flag' && opt.optarg === undefined) {
-    self._args.forEach(function(nonOpt, ind) {
-      if (nonOpt.index === (opt.index + 1)) {
-        opt.optarg = nonOpt.arg;
-        delete self._args[ind]
-      }
-    });
-  }
-  return opt;
-};
-
-Bebopt.prototype._catchInvalidOpt = function(opt, list) {
-  var self = this
-    , option = this._getOption(opt, list)
-    ;
-  if (list === 'short' && option === undefined) {
-    console.error(app.toString() + ': invalid option -- \'' + opt.arg + '\'');
-    process.exit(1);
-  } else if (list === 'long' && option === undefined) {
-    console.error(app.toString() + ': unrecognized option \'--' + opt.arg + '\'');
-    process.exit(1);
-  }
-};
-
-// threshold is the lowest value to be incremented
-Bebopt.prototype._syncIndexes = function(list, threshold) {
-  list.forEach(function(elem) {
-    if (elem.index >= threshold)
-      ++elem.index;
-  });
-  return list;
-};
-
-Bebopt.prototype._getOption = function(opt, listName) {
-  var self = this;
-  var option = self._options.filter(function(mem) {
-    if (opt.arg === mem.name && listName === mem.list)
-      return mem;
-  });
-  return (option.length === 0 ? undefined : option[0]);
-};
-
 Bebopt.prototype._setOptionArg = function(opt, listName) {
   var self = this
     , option = self._getOption(opt, listName)
@@ -343,39 +383,6 @@ Bebopt.prototype._setOptionArg = function(opt, listName) {
   else if (option.parent !== null)
     self._options[option.parent.index].arg = opt.optarg;
   return undefined;
-};
-
-Bebopt.prototype._splitCombinedShorts = function() {
-  var self = this;
-  self._opts.forEach(function(elem, ind) {
-    var dashes = elem.arg.replace(/^(--?).*/, '$1').length; // number of dashes
-    if (dashes === 1) {
-      var options = elem.arg.replace(/^-(.*)/, '$1').split('');
-      options = options.reverse();
-      elem.arg = options.pop();
-
-      while (options.length > 0) {
-        new_elem = clone(elem);
-        new_elem.arg = options.pop();
-        if (self._args[new_elem.index] !== undefined) {
-          self._syncIndexes(self._args, new_elem.index);
-        }
-        self._syncIndexes(self._opts, new_elem.index + 1);
-        ++new_elem.index;
-        self._opts.push(new_elem);
-      }
-    }
-  });
-};
-
-Bebopt.prototype._takesArg = function(opt, listName) {
-  var self = this;
-  self._catchInvalidOpt(opt, listName);
-  var type = self._getOption(opt, listName).type;
-  if (type !== 'flag')
-    return true;
-  else
-    return false;
 };
 
 Bebopt.prototype._resolveOpts = function(args, opts) {
