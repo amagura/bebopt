@@ -96,7 +96,8 @@ function runCallbacks(parent) {
     arg = option.cb.apply(self, [ option.arg ]);
     parent._servedArgs[option.name] = {
       before: option.arg, // arg before Cb
-      after: arg // arg after Cb
+      after: arg, // arg after Cb
+      index: option.cli_index
     };
   });
   return parent._servedArgs;
@@ -278,7 +279,7 @@ Bebopt.prototype._bindCli = function(cli, list) {
     , option
     ;
 
-  var option = this._getOption(cli);
+  var option = this._getOption(cli, list);
 
   switch (option.type) {
     case 'arg':
@@ -305,16 +306,17 @@ Bebopt.prototype._bindCli = function(cli, list) {
       console.error(err);
       process.exit(1);
     } else {
-      option.arg = cli.index;
+      option.arg = cli.index + 1;
     }
     break;
   }
+  option.cli_index = cli.index;
   return option;
 };
 
 Bebopt.prototype._catchInvalids = function(cli, list) {
   var self = this
-    , option = this._getOption(cli)
+    , option = this._getOption(cli, list)
     ;
 
   if (option === undefined) {
@@ -330,37 +332,35 @@ Bebopt.prototype._catchInvalids = function(cli, list) {
   return option;
 };
 
-Bebopt.prototype._getOption = function(cli) {
+Bebopt.prototype._getOption = function(cli, list) {
   var self = this
-    , list = cli.arg.length > 1 ? '_long' : '_short'
-    , otherList = list === '_long' ? '_short' : '_long'
-    , found
+    , otherList = (list === 'long' ) ? 'short' : 'long'
+    , _def
     ;
 
-  function _findOption(cli, list) {
-    var self = this;
-    return Object.keys(self[list]).some(function(def) {
-      if (cli.arg === def && list === self[list][def].list) {
-        self._option = self[list][def];
-        return true;
-      } else {
-        return self[list][def].child.some(function(child) {
-          self._option = self[list][def];
-          return (child.name === cli.arg && child.list === list);
-        });
+  for (var def in this['_' + list]) {
+    _def = this['_' + list][def];
+    if (cli.arg === def && list === _def.list)
+      return _def;
+    else {
+      for (var idx = 0; idx < _def.child.length; ++idx) {
+        if (_def.child[idx].name === cli.arg || _def.child[idx].list === list)
+          return _def;
       }
-    });
+    }
   }
 
-  found = _findOption.apply(this, [ cli, list ]);
-  if (!found) {
-    found = _findOption.apply(this, [ cli, otherList ]);
+  for (var def in this['_' + otherList]) {
+    _def = this['_' + otherList][def];
+    if (cli.arg === def && list === _def.list)
+      return _def;
+    else {
+      for (var idx = 0; idx < _def.child.length; ++idx) {
+        if (_def.child[idx].name === cli.arg || _def.child[idx].list === list)
+          return _def;
+      }
+    }
   }
-
-  var option = clone(this._option);
-  delete this._option;
-
-  return option;
 };
 
 Bebopt.prototype._resolveOpts = function(args, opts) {
@@ -371,25 +371,22 @@ Bebopt.prototype._resolveOpts = function(args, opts) {
     ;
 
   this._rawArgs.opts.forEach(function(cli) {
-    dashes = cli.arg.replace(/^(--?).*/, '$1').length; // number of dashes
-    cli.arg = cli.arg.replace(/^--?(.*)/, '$1');
-    [
-      [ 'long', 2 ],
-      [ 'short', 1 ]
-    ].forEach(function(arr) {
-      if (dashes === arr[1]) {
-        if (self._catchInvalids(cli, arr[0]).type !== 'flag') {
-          cli = self._catchSpaceDelimArgs(cli, arr[0]);
-        }
-        ccli = clone(cli);
-        ccli.list = arr[0];
-        self._thawedArgs.push(ccli);
-        self._cookedArgs.push(self._bindCli(cli, arr[0]));
-      }
-    });
+    var list = cli.arg.length > 1 ? 'long' : 'short';
+    if (self._catchInvalids(cli, list).type !== 'flag') {
+      cli = self._catchSpaceDelimArgs(cli, list);
+    }
+    ccli = clone(cli);
+    ccli.list = list;
+    self._thawedArgs.push(ccli);
+    self._cookedArgs.push(self._bindCli(cli, list));
   });
   this._cookedArgs = rev_uniq(this._cookedArgs);
-  this._servedArgs['_'] = this._rawArgs.args;
+  var under = this._servedArgs['_'] = {};
+  this._rawArgs.args.forEach(function(elem) {
+    under[elem.arg] = {
+      index: elem.index
+    };
+  });
   return this;
 };
 
@@ -398,7 +395,7 @@ Bebopt.prototype._catchSpaceDelimArgs = function(cli, list) {
     , option
     ;
 
-  option = this._getOption(cli);
+  option = this._getOption(cli, list);
 
   if (option.type !== 'flag' && cli.optarg === undefined) {
     this._rawArgs.args.forEach(function(nonOpt, ind) {
@@ -485,12 +482,12 @@ Bebopt.prototype.parse = function(args) {
   this._gatherArgs(args);
   this._splitCombinedShorts();
   this._resolveOpts();
-  log(this);
   return runCallbacks.apply({
     printHelp: this.printHelp,
     help: this.help,
     app: this.app,
     usage: this._usage,
+    log: log,
     args: {
       thawed: this._thawedArgs,
       cooked: this._cookedArgs

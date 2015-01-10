@@ -9,7 +9,7 @@ argv = new Bebopt()
     console.log('1.0')
     process.exit(0)).alias('v')
   .define('x', '\t\tblah', () ->
-    @_log(@))
+    @log(@))
   .parse()
 
 console.log argv
