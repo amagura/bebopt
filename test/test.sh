@@ -1,19 +1,7 @@
-#!/usr/bin/env shunit2
-# file: tests/test.sh
-
-both () {
-  coffee -- ../example.coffee "$@"
-  ((r=$?))
-  node -- ../example.js "$@"
-  ((++r))
-  return $r
-}
-
+//SKIP()\# file: f
 test_Invalids () {
   both "--help-x"
-  c=$?
-  assertEquals "bad long options cause fail?" 2 "$c"
+  assertEquals "bad long options cause fail?" 2 "$r"
   both "-z"
-  c=$?
-  assertEquals "bad short options cause fail?" 2 "$c"
+  assertEquals "bad short options cause fail?" 2 "$r"
 }

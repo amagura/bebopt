@@ -1,2 +1,2 @@
-m4_changequote(`//', `\\')
-m4_define(\\SKIP//)
+m4_changequote(`//', `\')
+m4_define(//SKIP\)
