@@ -23,8 +23,8 @@ GNU C getopt style options are fully supported by Bebopt.
 
 Both long and short options may receive arguments in both implicit and explicit forms.
 
-* explicit: `--help=<ARG>, --help <ARG>`
-* implicit: `-h <ARG>, -h=<ARG>`
+* explicit: `--help=<ARG>, -h=<ARG>`
+* implicit: `--help <ARG>, -h <ARG>`
 
 #### NOTE
 Flag options may only receive an argument in the explicit form: `<FLAG>=<ARG>`, which produces an error, since the value of a flag is determined by how many times it appears on the command-line, and so cannot be set using an argument.
