@@ -498,7 +498,6 @@ Bebopt.prototype.parse = function(args) {
   this._gatherArgs(args);
   this._splitCombinedShorts();
   this._resolveOpts();
-  log(this);
   return runCallbacks.apply({
     printHelp: this.printHelp,
     help: this.help,
