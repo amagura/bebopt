@@ -4,5 +4,5 @@ m4_define(\{WIKI\}, \{m4_ifelse(\{$1\}, \{\}, \{https://github.com/amagura/bebop
 m4_define(\{BEBOP_START\}, \{var argv = new Bebopt
   .usage('hello')\})
 m4_define(\{BEBOP_DEF\}, \{.define('h', '\tfoo', function(){})\})
-m4_define(\{VERSION\}, \{0.2.x\})
+m4_define(\{VERSION\}, \{Version 0.2.x\})
 m4_dnl vim:ft=m4:
