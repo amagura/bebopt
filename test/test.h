@@ -1,5 +1,4 @@
-//SKIP()\\
-# file: f
+//SKIP(#file: tests/test.sh)\\
 
 #define both(...) \
   ((r=0)) \
@@ -9,8 +8,8 @@
   ((++r))
 
 test_Invalids () {
-  both "--help-x"
+  both("--help-x")
   assertEquals "bad long options cause fail?" 2 "$r"
-  both "-z"
+  both("-z")
   assertEquals "bad short options cause fail?" 2 "$r"
 }
