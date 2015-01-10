@@ -18,12 +18,10 @@ uglify := $(mydir)/node_modules/uglify-js/bin/uglifyjs
 
 SUBDIRS = src
 
-.PHONY: clean release all doc publish expand-doc
+.PHONY: clean release all doc publish expand-doc test
 all: build doc
 
 build: deps ugly test
-
-test:
 
 deps:
 	cd $(mydir); $(npm) install
@@ -54,6 +52,7 @@ clean:
 	$(foreach f,$(DOC:.m4=.md),$(RM) $(f);)
 	$(foreach f,$(DOC:.m4=.html),$(RM) $(f);)
 	$(foreach t,deps ugly style doc,$(RM) $(t);)
+	$(RM) $(mydir)/test/test.sh
 
 release: deps ugly
 	cd $(mydir); \
@@ -69,6 +68,11 @@ release: deps ugly
 	  $(RM) -r node_modules; \
 	  git clean -e bebopt.min.tar.gz -f
 
-check:
-	cd $(mydir)/tests; \
-	  ./test.sh
+%.sh : %.cpp
+	$(CC) -E -Wp,-nostdinc,-nostdinc++,-w,-fno-show-column,-P -Wp,-CC $< > $(@:.sh=._m4) ; \
+	  $(m4) -P $(@:.sh=._m4) > $@
+
+check: $(mydir)/test/test.sh
+	shunit2 test.sh
+
+test: $(mydir)/test/test.sh
