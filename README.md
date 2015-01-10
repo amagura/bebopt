@@ -4,8 +4,8 @@ a more powerful option parser for node.js
 # Why another option parser?
 Because so many parsers in node.js either have implementation problems or require boilerplate code.
 
-# API
-Please refer to the [wiki](https://github.com/amagura/bebopt/wiki/Public-API) for documentation
+#### NOTE
+If you're looking for documentation, please refer to the [wiki](https://github.com/amagura/bebopt/wiki/Public-API).
 
 ## The problem
 ### Dysfunctional Implementations
