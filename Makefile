@@ -4,7 +4,7 @@ mydir := $(abspath $(lastword $(dir $(MAKEFILE_LIST))))
 cwd := $(notdir $(patsubst %/,%,$(dir $(mkfile_path))))
 
 # source code
-DOC := $(wildcard $(mydir)/src/*.m4)
+DOC := "$(wildcard $(mydir)/src/*.m4)"
 SRC = $(filter-out %.min.js, $(wildcard $(mydir)/src/*.js))
 EXT = package.json LICENSE
 
