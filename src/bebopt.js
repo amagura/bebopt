@@ -23,7 +23,7 @@ var util      = require('util')
   ;
 
 function rev_uniq(arr) {
-  var seen = {}
+  var seen = Object.create(null)
     , out = []
     , len = arr.length
     , jdx = 0;
