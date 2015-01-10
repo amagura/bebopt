@@ -10,13 +10,15 @@ m4_include(m4)m4_dnl
    - [Long Options](WIKI(Public-API#long-options))
     - [Short Options](WIKI(Public-API#short-options))
  - [.alias](WIKI(Public-API#this--aliasaliases))
+* [Callback Methods](WIKI(Public-API#callbacks-methods))
+  - [printHelp](WIKI(Public-API#undefined--printhelpcb))
 
 ---
 
 # Public Methods
 
 ## _`this`_ &larr; .usage(string)
-Sets the usage-string printed by [printHelp](WIKI(API#printHelp)) to `string`; it is the first thing printed by [printHelp](WIKI(API#printHelp))
+Sets the usage-string printed by [printHelp](WIKI(Public-API#undefined--printhelpcb)) to `string`; it is the first thing printed by [printHelp](WIKI(Public-API#undefined--printhelpcb))
 
 #### Example:
 ```javascript
@@ -106,6 +108,7 @@ calling `.alias` without prefacing it with an option defintion will raise an exc
 EXAMPLE()
 ```javascript
 BEBOP_START
+  .usage('hello')
   BEBOP_DEF
   .alias('help')
   .parse(['--help'])
@@ -115,3 +118,11 @@ OUTPUT()
 hello
   foo
 ```
+
+# Callback Methods
+Public functions intended to only be used within option callbacks.
+
+## *`undefined`* &larr; printHelp(cb)
+prints program usage, followed by the help text for each option defined.
+
+see [usage](WIKI(Public-API#this--usagestring)) for an example.
