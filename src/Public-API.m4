@@ -3,19 +3,19 @@ m4_include(m4)m4_dnl
 # VERSION
 
 ### Index
-* [Public Methods](WIKI(API#public-methods))
- - [.usage](WIKI(API#usagestring--this))
- - [.parse](WIKI(API#parseargs--hash))
- - [.define](WIKI(API#definename-help-text-callback--this))
-   - [Long Options](WIKI(API#long-options))
-    - [Short Options](WIKI(API#short-options))
- - [.alias](WIKI(API#aliaskeys-aliases--this))
+* [Public Methods](WIKI(Public-API#public-methods))
+ - [.usage](WIKI(Public-API#this--usagestring))
+ - [.parse](WIKI(Public-API#hash--parseargs))
+ - [.define](WIKI(Public-API#this--definename-help-text-callback))
+   - [Long Options](WIKI(Public-API#long-options))
+    - [Short Options](WIKI(Public-API#short-options))
+ - [.alias](WIKI(Public-API#this--aliasaliases))
 
 ---
 
 # Public Methods
 
-## .usage(string) &rarr; `this`
+## _`this`_ &larr; .usage(string)
 Sets the usage-string printed by [printHelp](WIKI(API#printHelp)) to `string`; it is the first thing printed by [printHelp](WIKI(API#printHelp))
 
 #### Example:
@@ -32,7 +32,7 @@ hello
   -h    print this message and exit
 ```
 
-## .parse([args]) &rarr; `Hash`
+## _`Hash`_ &larr; .parse([args])
 Parses `args`, or `process.argv` if `args` is undefined.
 The hash returned by `.parse` is of the form:
 
@@ -44,8 +44,7 @@ The hash returned by `.parse` is of the form:
   }
 }
 ```
-&nbsp;
-#### Example 1:
+EXAMPLE(1)
 ```javascript
 BEBOP_START
   .define('h:', '\tfoo', function(){}) // `-h' takes a required arg
@@ -55,13 +54,11 @@ BEBOP_START
   ]);
 console.log(argv);
 ```
-&nbsp;
-#### Output:
+OUTPUT()
 ```javascript
 // the callback didn't return anything: making `after' undefined.
 { h: { before: 'bar', after: undefined }}
 ```
-&nbsp;
 #### Example 2:
 ```javascript
 BEBOP_START
@@ -73,14 +70,13 @@ BEBOP_START
   ]);
 console.log(argv);
 ```
-&nbsp;
-#### Output:
+OUTPUT()
 ```javascript
 // the callback returned `true'.
 { h: { before: 'bar', after: true }}
 ```
 
-## .define(name, help-text, callback) &rarr; `this`
+## _`this`_ &larr; .define(name, help-text, callback)
 defines an option named `name`.
 
 The following `name` suffixes have special meanings:
@@ -90,33 +86,32 @@ The following `name` suffixes have special meanings:
 
 The `help-text` and `callback` args can be passed in any order, so long as they come after `name`.
 
-### Short Options
+#### Short Options
 Short options are limited to single character names.  (e.g. `h`, `v`)
 ```javascript
 .define('h', 'foobar', function(){}); // defines `-h'
 ```
 
-### Long Options
+#### Long Options
 Long options are limited to multi-character names. (e.g. `help`, `version`)
 ```javascript
 .define('help', 'foobar', function(){}); // defines `--help'
 ```
 
-## .alias(keys, aliases) &rarr; `this`
-defines alias options for option _keys_.
+## *`this`* &larr; .alias(aliases)
+define aliases for an immediately preceding option definition.
 
-A _key_ may have multiple _aliases_, but an _alias_ cannot be assigned to more than one _key_.
-
-If _keys_ is an array, then _aliases_ should also be an array of equal length, and their contents should occur pairwise. (i.e. `aliases[n]` is assigned to `keys[n]`)
-
-#### Example:
+##### NOTE
+calling `.alias` without prefacing it with an option defintion will raise an exception.
+EXAMPLE()
 ```javascript
 BEBOP_START
   BEBOP_DEF
-  .alias('help', 'h')
+  .alias('help')
   .parse(['--help'])
 ```
-#### Output:
+OUTPUT()
 ```
-foo
+hello
+  foo
 ```
