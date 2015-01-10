@@ -12,6 +12,7 @@ m4_include(m4)m4_dnl
  - [.alias](WIKI(Public-API#this--aliasaliases))
 * [Callback Methods](WIKI(Public-API#callback-methods))
   - [printHelp](WIKI(Public-API#undefined--printhelpcb))
+  - [log](WIKI(PUBLIC-API#undefined--log...))
 
 ---
 
@@ -126,3 +127,20 @@ Public functions intended to only be used within option callbacks.
 prints program usage, followed by the help text for each option defined.
 
 see [usage](WIKI(Public-API#this--usagestring)) for an example.
+
+## *`undefined`* &larr; log(...)
+If given a single argument, log will print the output of `util.inspect(ARG)` to _stdout_; when multiple arguments are present, log prints the even ones to _stdout_ using `process.stdout.write()`, and then inspects the odd ones as expected.
+
+EXAMPLE()
+```javascript
+BEBOP_START
+  .usage('hello')
+  .define('i', 'blah', function(i) {
+      this.log(i);
+  })
+  .parse(['-i']);
+```
+OUTPUT()
+```javascript
+1 // boolean flag `-i' appeared one time
+```
