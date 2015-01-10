@@ -12,8 +12,8 @@ var argv = Bebopt
     console.log('1.0');
     process.exit(0);
   }).alias('v', 'ver')
-  .define('x', '\t\tblah', function() {
-    this.log(this);
+  .define('x', '\t\tblah', function(x) {
+    this.log(x);
   })
   .parse();
 
