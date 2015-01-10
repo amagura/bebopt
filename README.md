@@ -6,7 +6,7 @@ If you're looking for documentation, please refer to the [wiki](https://github.c
 
 # Why another option parser?
 Because I'm tired of using option parsers that don't do their jobs very well.
-Nearly every parser I've used has required either a workaround to make it work _correctly_ or boilerplate code that seems to scare some developers, but shouldn't be required anyway.  In short: untraditional implementations and poor abstractions.
+Nearly every parser I've used has required either a workaround to actually make it work, or boilerplate code that's off-putting (at least, for some developers).  In short: untraditional implementations and poor abstractions.
 
 ## Some examples
 Take [optimist](https://github.com/substack/node-optimist) and [yargs](https://github.com/chevex/yargs), for example: both of them are great parsers in their own right, but they provide no method or abstraction for handling arguments _in the order in which they_ appear _on the command-line_.
