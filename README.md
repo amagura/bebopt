@@ -1,14 +1,14 @@
 # Bebopt [![Build Status](https://travis-ci.org/amagura/bebopt.svg?branch=master)](https://travis-ci.org/amagura/bebopt)
 a more powerful option parser for node.js
 
-# Why another option parser?
-Because so many parsers in node.js either have implementation problems or require boilerplate code.
-
 #### NOTE
 If you're looking for documentation, please refer to the [wiki](https://github.com/amagura/bebopt/wiki/Public-API).
 
-## The problem
-### Dysfunctional Implementations
+# Why another option parser?
+Because I'm tired of using option parsers that don't do their jobs very well.
+Nearly every parser I've used has required either a workaround to actually make it work, or boilerplate code that's off-putting (at least, for some developers).  In short: untraditional implementations and poor abstractions.
+
+## Some examples
 Take [optimist](https://github.com/substack/node-optimist) and [yargs](https://github.com/chevex/yargs), for example: both of them are great parsers in their own right, but they provide no method or abstraction for handling arguments _in the order in which they_ appear _on the command-line_.
 
 Instead, the way I've seen most people use both of these excellent parsers inherently makes their programs handle args in the order in which they are handled:
@@ -55,5 +55,3 @@ Object.keys(args).slice(2).forEach(function(key) {
 });
 ```
 I say _sort of_ because the above solution doesn't capture [commands](https://github.com/substack/node-optimist#and-non-hypenated-options-too-just-use-argv_), is ugly, and [_doesn't_ work](https://github.com/chevex/yargs/issues/39) with yargs!!
-
-Optimist, at least, has other problems as well: such as flag options (i.e. options that do not take args) being defined as either `true` or `false` depending on whether or not they appear on the command-line.  However, most of these are related to the _main_ problem I've already described.
