@@ -17,10 +17,28 @@ limitations under the License.
 ***/
 'use strict';
 
-var util = require('util')
+var util      = require('util')
   , clone     = require('clone')
   , basename  = require('path').basename
   ;
+
+function rev_uniq(arr) {
+  var seen = {}
+    , out = []
+    , len = arr.length
+    , jdx = 0;
+
+  for(var idx = 0; idx < len; ++idx) {
+    var item = arr.reverse()[idx];
+    item = (item instanceof Function) ? item.toString() : item;
+    if(seen[item] !== 1) {
+      seen[item] = 1;
+      out[jdx++] = item;
+    }
+  }
+
+  return out;
+}
 
 function makeOption(name) {
   var new_op = name.replace(/^.*?([:]*)$/, '$1')
@@ -370,9 +388,8 @@ Bebopt.prototype._resolveOpts = function(args, opts) {
       }
     });
   });
-  this._cookedArgs = this._cookedArgs.reduce(function(b, a) {
-    return ob
-  this._servedArgs['_'] = self._rawArgs.args;
+  this._cookedArgs = rev_uniq(this._cookedArgs);
+  this._servedArgs['_'] = this._rawArgs.args;
   return this;
 };
 
