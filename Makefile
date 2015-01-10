@@ -68,3 +68,7 @@ release: deps ugly
 	  git add package.json LICENSE index.js lib; \
 	  $(RM) -r node_modules; \
 	  git clean -e bebopt.min.tar.gz -f
+
+check:
+	cd $(mydir)/tests; \
+	  ./test.sh
