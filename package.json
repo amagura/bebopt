@@ -23,6 +23,10 @@
     "argv",
     "command-line",
     "option-parser"
+    "option parsing",
+    "option parser",
+    "option",
+    "options"
   ],
   "author": "Alexej Magura",
   "license": "Apache 2.0",
