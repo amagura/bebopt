@@ -12,7 +12,7 @@ m4_include(m4)m4_dnl
  - [.alias](WIKI(Public-API#this--aliasaliases))
 * [Callback Methods](WIKI(Public-API#callback-methods))
   - [printHelp](WIKI(Public-API#undefined--printhelpcb))
-  - [log](WIKI(PUBLIC-API#undefined--log...))
+  - [log](WIKI(PUBLIC-API#undefined--log))
 
 ---
 
