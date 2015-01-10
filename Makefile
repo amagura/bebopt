@@ -28,12 +28,12 @@ deps:
 	@touch deps
 
 %.md : %.m4
-	$(m4) -I $(mydir)/src -P $< > "$(subst -, ,$@)"
+	$(m4) -I $(mydir)/src -P $< > $@
 
 doc: $(DOC:.m4=.md)
 
 publish: $(DOC:.m4=.md)
-	$(foreach d,$(DOC:.m4=.md),mv $(d) $(mydir)/wiki;)
+	$(foreach d,$(DOC:.m4=.md),mv $(d) $(mydir)/wiki/"$(notdir $(subst -, ,$(d)))";)
 
 lint: style
 	@touch lint
