@@ -1,9 +1,9 @@
 
 
-#file: tests/test.sh#define both(...)   ((r=0))   coffee -- ../example.coffe __VA_ARGS__   ((r=$?))   node -- ../example.js __VA_ARGS__   ((++r))
+#file: tests/test.sh
 test_Invalids () {
-  both "--help-x"
+  ((r=0)) coffee -- ../example.coffe "--help-x" ((r=$?)) node -- ../example.js "--help-x" ((++r))
   assertEquals "bad long options cause fail?" 2 "$r"
-  both "-z"
+  ((r=0)) coffee -- ../example.coffe "-z" ((r=$?)) node -- ../example.js "-z" ((++r))
   assertEquals "bad short options cause fail?" 2 "$r"
 }
