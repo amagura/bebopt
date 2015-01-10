@@ -2,15 +2,13 @@
 Bebopt = require './index'
 
 argv = new Bebopt()
-  .lO('help::', () ->
+  .define('help::', '\tprint this message and exit', () ->
     @printHelp()
-    process.exit(0))
-  .sO('h', '\tprint this message and exit')
-  .lO('version', () ->
+    process.exit(0)).alias('h')
+  .define('version', '\tprint program version and exit', () ->
     console.log('1.0')
-    process.exit(0))
-  .sO('v', '\tprint program version and exit')
-  .sO('x', '\t\tblah', () ->
+    process.exit(0)).alias('v')
+  .define('x', '\t\tblah', () ->
     @_log(@))
   .parse()
 

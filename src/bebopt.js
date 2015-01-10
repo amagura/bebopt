@@ -22,24 +22,6 @@ var util = require('util')
   , basename  = require('path').basename
   ;
 
-// functions that don't need to be part of the Bebopt object >>>1
-function separateOptionsFromArgs(opt) {
-  var arg, _opt;
-  if (/=/.test(opt))
-    arg = opt.replace(/.*?=(.*)/, '$1');
-  else
-    arg = undefined;
-  _opt = opt.replace(/(.*)?=.*/, '$1');
-  return {
-    opt: _opt,
-    arg: arg
-  };
-}
-
-function sanitizeContext(cb) {
-  cb.apply(self, []);
-}
-
 function makeOption(name) {
   var new_op = name.replace(/^.*?([:]*)$/, '$1')
     , new_name = name.replace(/^(.*?)[:]*$/, '$1')
@@ -83,104 +65,6 @@ function filterNull(map) {
   });
 }
 
-function catchSpaceDelimArgs(cli, args, list) {
-  var option = getOption.apply(this, [ cli, list ]);
-
-  if (option.type !== 'flag' && cli.optarg === undefined) {
-    args.forEach(function(nonOpt, ind) {
-      if (nonOpt.index === (cli.index + 1)) {
-        cli.optarg = nonOpt.arg;
-        args[ind] = null;
-      }
-    });
-    args = filterNull(args);
-  }
-  return [ cli, args ];
-}
-
-function splitCombinedShorts(args, opts) {
-  var dashes
-    ;
-
-  opts.forEach(function(elem, ind) {
-    dashes = elem.arg.replace(/^(--?).*/, '$1').length;
-    if (dashes === 1) {
-      var options = elem.arg.replace(/^-(.*)/, '$1').split('');
-      options = options.reverse();
-      elem.arg = options.pop();
-
-      while (options.length > 0) {
-        new_elem = clone(elem);
-        new_elem.arg = options.pop();
-        if (args[new_elem.index] !== undefined) {
-          args = syncIndexes(args, new_elem.index);
-        }
-        opts = syncIndexes(opts, new_elem.index++);
-        opts.push(new_elem);
-      }
-    }
-  });
-  return [ args, opts ];
-}
-
-function getOption(cli, list) {
-  var self = this
-    , option = Object.keys(this._long).filter(function(memb) {
-    if (cli.arg === memb.name && list === memb.list)
-      return memb;
-  });
-
-  if (option.length === 0) {
-    var err = self.app.toString() + ': ';
-    if (list === 'short')
-      err += 'invalid option -- \'';
-    else
-      err += 'unrecognized option \'--';
-    err += cli.arg + '\'';
-    console.error(err);
-    process.exit(1);
-  }
-  return option[0];
-}
-
-function takesArg(cli, list) {
-  var self = this
-    , option = getOption.apply(this, [ cli, list ])
-    ;
-  return option.type !== 'flag';
-}
-
-function gatherArgs(args) {
-  var optend = false
-    , args = []
-    , opts = []
-    , argv = args ||
-      (process.argv.length === 1 ? process.argv.slice(1) : process.argv.slice(2))
-    ;
-  argv.forEach(function(arg, ind, arr) {
-    if (/^--$/.test(arg))
-      optend = true;
-    else
-      if (optend || /^[^-]+/.test(arg)) {
-        args.push({
-          arg: arg,
-          index: ind
-        });
-      } else {
-        var new_opt = separateOptionsFromArgs(arg);
-        opts.push({
-          arg: new_opt.opt,
-          optarg: new_opt.arg,
-          index: ind
-        });
-      }
-  });
-  return [
-    args,
-    opts
-  ];
-}
-
 function log(obj) { // XXX for debugging only
   console.log(util.inspect(obj, { colors: true, depth: null }));
 }
@@ -190,35 +74,16 @@ function runCallbacks(parent) {
     , arg
     ;
 
-  parent._cooked.forEach(function(option) {
+  parent._cookedArgs.forEach(function(option) {
     arg = option.cb.apply(self, [ option.arg ]);
-    parent._results[option.name] = {
+    parent._servedArgs[option.name] = {
       before: option.arg, // arg before Cb
       after: arg // arg after Cb
     };
   });
-  return parent._results;
+  return parent._servedArgs;
 }
 
-
-function SanitaryContext() {
-  this.usage = this.usage === null ? undefined : this.usage;
-  this.app;
-  this.help;
-  this.log = log;
-}
-
-SanitaryContext.prototype.printHelp = function(cb) {
-  var self = this
-    , cb = (cb === undefined ? console.error : cb)
-    , usage = (self.usage === undefined ? 'Usage: ' + self.app.toString() : self.usage)
-    ;
-
-  cb(usage);
-  self.help.forEach(function(txt) { cb(txt); });
-};
-
-// <<<1
 function Bebopt(app) {
   this.app = app ||
     (process.argv.length === 1) ? 'node' : basename(process.argv[1]);
@@ -227,6 +92,13 @@ function Bebopt(app) {
   this._short = {};
   this._help = [];
   this.help = [];
+  this._thawedArgs = [];
+  this._cookedArgs = [];
+  this._servedArgs = {};
+  this._rawArgs = {
+    args: [],
+    opts: []
+  };
   this._parent = null;
 }
 
@@ -256,7 +128,8 @@ Bebopt.prototype.define = function(_name, help, cb) {
       type: type,
       child: [],
       arg: undefined,
-      index: index
+      index: index,
+      list: list
     };
 
     _defineHelp.apply(this, [this['_' + list][name], text]);
@@ -313,6 +186,16 @@ Bebopt.prototype.usage = function(text) {
   this._usage = text;
   return this;
 };
+
+Bebopt.prototype.printHelp = function(cb) {
+  var usage;
+  cb = (cb === undefined || cb === null) ? console.error : cb;
+  usage = (this.usage === undefined) ? 'Usage: ' + this.app.toString() : this.usage;
+
+  cb(usage);
+  this.help.forEach(function(txt) { cb(txt); });
+};
+
 
 Bebopt.prototype._makeHelp = function() {
   var self = this
@@ -372,87 +255,233 @@ Bebopt.prototype._makeHelp = function() {
   delete self._help;
 };
 
-Bebopt.prototype._setOptionArg = function(opt, listName) {
+Bebopt.prototype._bindCli = function(cli, list) {
   var self = this
-    , option = self._getOption(opt, listName)
+    , option
     ;
 
-  option.arg = opt.optarg;
-  if (option.child !== null)
-    self._options[option.child.index].arg = opt.optarg;
-  else if (option.parent !== null)
-    self._options[option.parent.index].arg = opt.optarg;
-  return undefined;
+  var option = this._getOption(cli);
+
+  switch (option.type) {
+    case 'arg':
+      if (cli.optarg === undefined) {
+        var err = this.app.toString();
+        err += (list === 'short'
+            ? 'option requires an argument -- \'' + cli.arg + '\''
+            : 'option \'--' + cli.arg + '\' requires an argument');
+        console.error(err);
+        process.exit(1);
+      } else {
+        option.arg = cli.optarg;
+      }
+      break;
+  case 'optarg':
+    option.arg = cli.optarg;
+    break;
+  case 'flag':
+    if (cli.optarg !== undefined) {
+      var err = self.app.toString();
+      err += (list === 'short'
+              ? 'option doesn\'t allow an argument -- \'' + cli.arg + '\''
+              : 'option \'--' + cli.arg + '\' doesn\'t allow an argument');
+      console.error(err);
+      process.exit(1);
+    } else {
+      option.arg = cli.index;
+    }
+    break;
+  }
+  return option;
+};
+
+Bebopt.prototype._catchInvalids = function(cli, list) {
+  var self = this
+    , option = this._getOption(cli)
+    ;
+
+  if (option === undefined) {
+    var err = self.app.toString() + ': ';
+    if (list === 'short')
+      err += 'invalid option -- \'';
+    else
+      err += 'unrecognized option \'--';
+    err += cli.arg + '\'';
+    console.error(err);
+    process.exit(1);
+  }
+  return option;
+};
+
+Bebopt.prototype._getOption = function(cli) {
+  var self = this
+    , list = cli.arg.length > 1 ? '_long' : '_short'
+    , otherList = list === '_long' ? '_short' : '_long'
+    , found
+    ;
+
+  function _findOption(cli, list) {
+    var self = this;
+    return Object.keys(self[list]).some(function(def) {
+      if (cli.arg === def && list === self[list][def].list) {
+        self._option = self[list][def];
+        return true;
+      } else {
+        return self[list][def].child.some(function(child) {
+          self._option = self[list][def];
+          return (child.name === cli.arg && child.list === list);
+        });
+      }
+    });
+  }
+
+  found = _findOption.apply(this, [ cli, list ]);
+  if (!found) {
+    found = _findOption.apply(this, [ cli, otherList ]);
+  }
+
+  var option = clone(this._option);
+  delete this._option;
+
+  return option;
 };
 
 Bebopt.prototype._resolveOpts = function(args, opts) {
-  var self = this;
-  opts = self._splitCombinedShorts(opts);
-  opts.forEach(function(elem) {
-    var dashes = elem.arg.replace(/^(--?).*/, '$1').length; // number of dashes
-    elem.arg = elem.arg.replace(/^--?(.*)/, '$1');
+  var self = this
+    , dashes
+    , option
+    , ccli
+    ;
+
+  this._rawArgs.opts.forEach(function(cli) {
+    dashes = cli.arg.replace(/^(--?).*/, '$1').length; // number of dashes
+    cli.arg = cli.arg.replace(/^--?(.*)/, '$1');
     [
       [ 'long', 2 ],
       [ 'short', 1 ]
     ].forEach(function(arr) {
       if (dashes === arr[1]) {
-        if (self._takesArg(elem, arr[0])) {
-          elem = self._catchSpaceDelimArgs(elem, arr[0])
+        if (self._catchInvalids(cli, arr[0]).type !== 'flag') {
+          cli = self._catchSpaceDelimArgs(cli, arr[0]);
         }
-        self._bindOptToList(elem, arr[0]);
-        var option = self._getOption(elem, arr[0]);
-        self._cooked.push(option);
+        ccli = clone(cli);
+        ccli.list = arr[0];
+        self._thawedArgs.push(ccli);
+        self._cookedArgs.push(self._bindCli(cli, arr[0]));
       }
     });
   });
-  self._eaten['_'] = args;
+  this._cookedArgs = this._cookedArgs.reduce(function(b, a) {
+    return ob
+  this._servedArgs['_'] = self._rawArgs.args;
+  return this;
 };
 
-Bebopt.prototype._bindOptToList = function(opt, listName) {
+Bebopt.prototype._catchSpaceDelimArgs = function(cli, list) {
   var self = this
-    , type = self._getOption(opt, listName).type
+    , option
     ;
 
-  if (type === 'arg') {
-    if (opt.optarg === undefined) {
-      var err = self.app.toString();
-      err += (listName === 'short'
-              ? 'option requires an argument -- \'' + opt.arg + '\''
-              : 'option \'--' + opt.arg + '\' requires an argument');
-      console.error(err);
-      process.exit(1);
-    } else {
-      self._setOptionArg(opt, listName);
-    }
-  } else if (type === 'optarg') {
-    self._setOptionArg(opt, listName);
-  } else if (type === 'flag') {
-    if (opt.optarg !== undefined) {
-      var err = self.app.toString();
-      err += (listName === 'short'
-              ? 'option doesn\'t allow an argument -- \'' + opt.arg + '\''
-              : 'option \'--' + opt.arg + '\' doesn\'t allow an argument');
-      console.error(err);
-      process.exit(1);
-    } else {
-      self._setOptionArg(opt, listName);
-    }
+  option = this._getOption(cli);
+
+  if (option.type !== 'flag' && cli.optarg === undefined) {
+    this._rawArgs.args.forEach(function(nonOpt, ind) {
+      if (nonOpt.index === (cli.index + 1)) {
+        cli.optarg = nonOpt.arg;
+        self.args[ind] = null;
+      }
+    });
+    self._rawArgs.args = filterNull(self._rawArgs.args);
   }
+  return cli;
+};
+
+Bebopt.prototype._splitCombinedShorts = function() {
+  var self = this
+    , dashes
+    ;
+
+  this._rawArgs.opts.forEach(function(elem, ind) {
+    dashes = elem.arg.replace(/^(--?).*/, '$1').length;
+    if (dashes === 1) {
+      var options = elem.arg.replace(/^-(.*)/, '$1').split('');
+      options = options.reverse();
+      elem.arg = options.pop();
+
+      while (options.length > 0) {
+        new_elem = clone(elem);
+        new_elem.arg = options.pop();
+        if (self._rawArgs.args[new_elem.index] !== undefined) {
+          args = syncIndexes(self._rawArgs.args, new_elem.index);
+        }
+        opts = syncIndexes(self._rawArgs.opts, new_elem.index++);
+        opts.push(new_elem);
+      }
+    }
+  });
+  return this;
+};
+
+Bebopt.prototype._gatherArgs = function(args) {
+  var self = this
+    , optend
+    , argv = args ||
+      (process.argv.length === 1 ? process.argv.slice(1) : process.argv.slice(2))
+    ;
+
+  function _separateOptionsFromArgs(opt) {
+    var arg, _opt;
+    if (/=/.test(opt))
+      arg = opt.replace(/.*?=(.*)/, '$1');
+    else
+      arg = undefined;
+    _opt = opt.replace(/(.*)?=.*/, '$1');
+    return {
+      opt: _opt,
+      arg: arg
+    };
+  }
+
+  argv.forEach(function(arg, ind, arr) {
+    if (/^--$/.test(arg))
+      optend = true;
+    else
+      if (optend || /^[^-]+/.test(arg)) {
+        self._rawArgs.args.push({
+          arg: arg,
+          index: ind
+        });
+      } else {
+        var new_opt = _separateOptionsFromArgs(arg);
+        self._rawArgs.opts.push({
+          arg: new_opt.opt,
+          optarg: new_opt.arg,
+          index: ind
+        });
+      }
+  });
+  return this;
 };
 
 Bebopt.prototype.parse = function(args) {
+  delete this._parent;
   this._makeHelp();
-  this._resolveOpts(gatherArgs(args));
-  var SC = new SanitaryContext.apply({
-    help: this._help,
-    app: this.app,
-    usage: this._usage
-  }, []);
-  runCallbacks.apply(SC, [{
-    _cooked: this._cooked,
-    _results: this._results
-  }]);
+  this._gatherArgs(args);
+  this._splitCombinedShorts();
+  this._resolveOpts();
   log(this);
+  return runCallbacks.apply({
+    printHelp: this.printHelp,
+    help: this.help,
+    app: this.app,
+    usage: this._usage,
+    args: {
+      thawed: this._thawedArgs,
+      cooked: this._cookedArgs
+    }
+  }, [{
+    _cookedArgs: this._cookedArgs,
+    _servedArgs: this._servedArgs
+  }]);
 };
 
 module.exports = Bebopt;
