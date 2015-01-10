@@ -279,7 +279,7 @@ Bebopt.prototype._bindCli = function(cli, list) {
     , option
     ;
 
-  var option = this._getOption(cli, list);
+  var option = this._catchInvalids(cli, list);
 
   switch (option.type) {
     case 'arg':
@@ -316,7 +316,7 @@ Bebopt.prototype._bindCli = function(cli, list) {
 
 Bebopt.prototype._catchInvalids = function(cli, list) {
   var self = this
-    , option = this._getOption(cli, list)
+    , option = self._getOption(cli, list)
     ;
 
   if (option === undefined) {
@@ -335,29 +335,37 @@ Bebopt.prototype._catchInvalids = function(cli, list) {
 Bebopt.prototype._getOption = function(cli, list) {
   var self = this
     , otherList = (list === 'long' ) ? 'short' : 'long'
-    , _def
+    , _def = null
+    , _ndef = null
     ;
 
   for (var def in this['_' + list]) {
     _def = this['_' + list][def];
-    if (cli.arg === def && list === _def.list)
+    if (cli.arg === def && list === _def.list) {
       return _def;
-    else {
+    } else {
       for (var idx = 0; idx < _def.child.length; ++idx) {
-        if (_def.child[idx].name === cli.arg || _def.child[idx].list === list)
+        if (_def.child[idx].name === cli.arg || _def.child[idx].list === list) {
           return _def;
+        } else {
+          return undefined;
+        }
       }
     }
   }
 
-  for (var def in this['_' + otherList]) {
-    _def = this['_' + otherList][def];
-    if (cli.arg === def && list === _def.list)
-      return _def;
-    else {
-      for (var idx = 0; idx < _def.child.length; ++idx) {
-        if (_def.child[idx].name === cli.arg || _def.child[idx].list === list)
-          return _def;
+  for (var ndef in this['_' + otherList]) {
+    _ndef = this['_' + otherList][ndef];
+    console.log(cli.arg === ndef);
+    if (cli.arg === ndef && list === _ndef.list) {
+      return _ndef;
+    } else {
+      for (var hdx = 0; idx < _ndef.child.length; ++idx) {
+        if (_ndef.child[idx].name === cli.arg || _ndef.child[idx].list === list) {
+          return _ndef;
+        } else {
+          return undefined;
+        }
       }
     }
   }
@@ -371,6 +379,8 @@ Bebopt.prototype._resolveOpts = function(args, opts) {
     ;
 
   this._rawArgs.opts.forEach(function(cli) {
+    cli.arg = cli.arg.replace(/^--?(.*)/, '$1');
+    console.log(cli);
     var list = cli.arg.length > 1 ? 'long' : 'short';
     if (self._catchInvalids(cli, list).type !== 'flag') {
       cli = self._catchSpaceDelimArgs(cli, list);
@@ -395,7 +405,7 @@ Bebopt.prototype._catchSpaceDelimArgs = function(cli, list) {
     , option
     ;
 
-  option = this._getOption(cli, list);
+  option = this._catchInvalids(cli, list);
 
   if (option.type !== 'flag' && cli.optarg === undefined) {
     this._rawArgs.args.forEach(function(nonOpt, ind) {
@@ -412,6 +422,7 @@ Bebopt.prototype._catchSpaceDelimArgs = function(cli, list) {
 Bebopt.prototype._splitCombinedShorts = function() {
   var self = this
     , dashes
+    , new_elem
     ;
 
   this._rawArgs.opts.forEach(function(elem, ind) {
@@ -427,8 +438,8 @@ Bebopt.prototype._splitCombinedShorts = function() {
         if (self._rawArgs.args[new_elem.index] !== undefined) {
           args = syncIndexes(self._rawArgs.args, new_elem.index);
         }
-        opts = syncIndexes(self._rawArgs.opts, new_elem.index++);
-        opts.push(new_elem);
+        self._rawArgs.opts = syncIndexes(self._rawArgs.opts, new_elem.index++);
+        self._rawArgs.opts.push(new_elem);
       }
     }
   });
@@ -482,6 +493,7 @@ Bebopt.prototype.parse = function(args) {
   this._gatherArgs(args);
   this._splitCombinedShorts();
   this._resolveOpts();
+  log(this);
   return runCallbacks.apply({
     printHelp: this.printHelp,
     help: this.help,
