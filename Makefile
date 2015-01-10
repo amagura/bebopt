@@ -68,9 +68,10 @@ release: deps ugly
 	  $(RM) -r node_modules; \
 	  git clean -e bebopt.min.tar.gz -f
 
-%.sh : %.cpp
-	$(CC) -E -Wp,-nostdinc,-nostdinc++,-w,-fno-show-column,-P -Wp,-CC $< > $(@:.sh=._m4) ; \
-	  $(m4) -P $(@:.sh=._m4) > $@
+%.sh : %.h
+	$(CC) -E -Wp,-nostdinc,-nostdinc++,-w,-fno-show-column,-P -Wp,-CC $< > $(@:.sh=.__m4) ; \
+	  $(m4) -P $(mydir)/test/test.m4 $(@:.sh=.__m4) > $(@:.sh=._m4); \
+	  $(m4) -P $(mydir)/test/test.m4 $(@:.sh=._m4) > $@
 
 check: $(mydir)/test/test.sh
 	shunit2 test.sh
