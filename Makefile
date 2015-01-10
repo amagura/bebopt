@@ -33,7 +33,7 @@ deps:
 doc: $(DOC:.m4=.md)
 
 publish: $(DOC:.m4=.md)
-	$(foreach d,$(DOC:.m4=.md),git add $(d); git commit -m '.'; mv $(d) $(mydir)/wiki/"$(notdir $(subst -, ,$(d)))";)
+	$(foreach d,$(DOC:.m4=.md),git add $(d:.md=.m4); git commit -m '.'; mv $(d) $(mydir)/wiki/"$(notdir $(subst -, ,$(d)))";)
 	$(foreach d,$(DOC:.m4=.md),cd $(mydir)/wiki/; git add $(mydir)/wiki/"$(notdir $(subst -, ,$(d)))"; git commit -m '.'; git push;)
 
 lint: style
