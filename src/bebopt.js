@@ -83,8 +83,15 @@ function filterNull(map) {
   });
 }
 
-function log(obj) { // XXX for debugging only
-  console.log(util.inspect(obj, { colors: true, depth: null }));
+function log() { // XXX for debugging only
+  if (arguments.length === 1) {
+    console.log(util.inspect(arguments[0], { colors: true, depth: null }));
+  } else {
+    for (var idx = 0; idx < arguments.length; ++idx) {
+      idx % 2 === 0 && process.stdout.write(arguments[idx])
+      idx % 2 === 1 && console.log(util.inspect(arguments[idx], { colors: true, depth: null }));
+    }
+  }
 }
 
 function runCallbacks(parent) {
@@ -345,7 +352,7 @@ Bebopt.prototype._getOption = function(cli, list) {
       return _def;
     } else {
       for (var idx = 0; idx < _def.child.length; ++idx) {
-        if (_def.child[idx].name === cli.arg || _def.child[idx].list === list) {
+        if (cli.arg === _def.child[idx].name && _def.child[idx].list === list) {
           return _def;
         } else {
           return undefined;
@@ -356,12 +363,11 @@ Bebopt.prototype._getOption = function(cli, list) {
 
   for (var ndef in this['_' + otherList]) {
     _ndef = this['_' + otherList][ndef];
-    console.log(cli.arg === ndef);
     if (cli.arg === ndef && list === _ndef.list) {
       return _ndef;
     } else {
-      for (var hdx = 0; idx < _ndef.child.length; ++idx) {
-        if (_ndef.child[idx].name === cli.arg || _ndef.child[idx].list === list) {
+      for (var hdx = 0; hdx < _ndef.child.length; ++idx) {
+        if (cli.arg === _ndef.child[hdx].name && _ndef.child[hdx].list === list) {
           return _ndef;
         } else {
           return undefined;
@@ -380,7 +386,6 @@ Bebopt.prototype._resolveOpts = function(args, opts) {
 
   this._rawArgs.opts.forEach(function(cli) {
     cli.arg = cli.arg.replace(/^--?(.*)/, '$1');
-    console.log(cli);
     var list = cli.arg.length > 1 ? 'long' : 'short';
     if (self._catchInvalids(cli, list).type !== 'flag') {
       cli = self._catchSpaceDelimArgs(cli, list);
