@@ -26,7 +26,7 @@ BEBOP_START
   .define('h', '\tprint this message and exit', function() {
       this.printHelp();
       process.exit(0);
-  })BEBOP_END(['-h']);
+  }).parse(['-h']);
 ```
 #### Output:
 ```
