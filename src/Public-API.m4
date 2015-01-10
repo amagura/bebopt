@@ -10,7 +10,7 @@ m4_include(m4)m4_dnl
    - [Long Options](WIKI(Public-API#long-options))
     - [Short Options](WIKI(Public-API#short-options))
  - [.alias](WIKI(Public-API#this--aliasaliases))
-* [Callback Methods](WIKI(Public-API#callbacks-methods))
+* [Callback Methods](WIKI(Public-API#callback-methods))
   - [printHelp](WIKI(Public-API#undefined--printhelpcb))
 
 ---
