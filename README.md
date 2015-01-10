@@ -4,6 +4,9 @@ a more powerful option parser for node.js
 # Why another option parser?
 Because so many parsers in node.js either have implementation problems or require boilerplate code.
 
+# API
+Please refer to the [wiki](https://github.com/amagura/bebopt/wiki/Public-API) for documentation
+
 ## The problem
 ### Dysfunctional Implementations
 Take [optimist](https://github.com/substack/node-optimist) and [yargs](https://github.com/chevex/yargs), for example: both of them are great parsers in their own right, but they provide no method or abstraction for handling arguments _in the order in which they_ appear _on the command-line_.
