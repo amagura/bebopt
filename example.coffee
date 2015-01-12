@@ -7,7 +7,7 @@ argv = new Bebopt()
     process.exit(0)).alias('h')
   .define('version', '\tprint program version and exit', () ->
     console.log('1.0')
-    process.exit(0)).alias('v')
+    process.exit(0)).alias('v', 'ver')
   .define('x', '\t\tblah', () ->
     @log(@))
   .parse()

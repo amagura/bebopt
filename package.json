@@ -1,7 +1,7 @@
 {
   "name": "bebopt",
-  "version": "0.2.4",
-  "description": "a more powerful, option parser for node.js",
+  "version": "0.2.5",
+  "description": "a more powerful option parser for node.js",
   "main": "index",
   "dependencies": {
     "clone": "0.x.x"
