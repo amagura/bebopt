@@ -117,7 +117,6 @@ OUTPUT()
 #### Example 2:
 ```javascript
 BEBOP_START
-  .usage('hello')
   .define('h:', '\tfoo', function(){ return true; })
   .parse([
     '-h',
@@ -161,7 +160,6 @@ calling `.alias` without prefacing it with an option defintion will raise an exc
 EXAMPLE()
 ```javascript
 BEBOP_START
-  .usage('hello')
   BEBOP_DEF
   .alias('help')
   .parse(['--help'])
@@ -186,7 +184,6 @@ If given a single argument, log will print the output of `util.inspect(ARG)` to 
 EXAMPLE()
 ```javascript
 BEBOP_START
-  .usage('hello')
   .define('i', 'blah', function(i) {
       this.log(i);
   })
