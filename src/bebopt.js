@@ -36,7 +36,6 @@ function rev_uniq(arr) {
       out[jdx++] = item;
     }
   }
-
   return out;
 }
 
@@ -83,7 +82,8 @@ function filterNull(map) {
   });
 }
 
-function log() { // XXX for debugging only
+// XXX for debugging
+function log() {
   if (arguments.length === 1) {
     console.log(util.inspect(arguments[0], { colors: true, depth: null }));
   } else {
@@ -185,7 +185,7 @@ Bebopt.prototype.define = function(_name, help, cb) {
 
 Bebopt.prototype.alias = function() {
   var self = this
-    , aliases = (arguments.length > 0 && arguments.length < 2
+    , aliases = (arguments.length === 1
                 ? [arguments[0]]
                 : Array.apply(null, arguments));
 
@@ -197,13 +197,14 @@ Bebopt.prototype.alias = function() {
     throw new Error(err);
   }
 
-  aliases.forEach(function(aname) {
-    var list = aname.length > 1 ? 'long' : 'short';
+  for (var hdx = 0; hdx < aliases.length; ++hdx) {
+    var list = aliases[hdx].length > 1 ? 'long' : 'short';
     self._parent.child.push({
-      name: aname,
+      name: aliases[hdx],
       list: list
     });
-  });
+  }
+
   self._parent = null;
   return this;
 };
