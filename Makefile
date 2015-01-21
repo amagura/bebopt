@@ -69,12 +69,10 @@ release: deps ugly
 	  $(RM) -r node_modules; \
 	  git clean -e bebopt.min.tar.gz -f
 
-%.sh : %.h
-	$(CC) -E -Wp,-nostdinc,-w,-fno-show-column,-P -Wp,-CC $< > $(@:.sh=.__m4) ; \
-	  $(m4) -P $(mydir)/test/test.m4 $(@:.sh=.__m4) > $(@:.sh=._m4); \
-	  $(m4) -P $(mydir)/test/test.m4 $(@:.sh=._m4) > $@
+%.sh : %.m4
+	$(m4) -P $(@:.sh=.m4) > $@;
 
 check: $(mydir)/test/test.sh
-	bash test/test.sh
+	bash $(mydir)/test/test.sh
 
 test: $(mydir)/test/test.sh
