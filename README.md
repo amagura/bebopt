@@ -4,6 +4,11 @@ a more powerful option parser for node.js
 #### NOTE
 If you're looking for documentation, please refer to the [wiki](https://github.com/amagura/bebopt/wiki/Public-API).
 
+
+#### NOTICE
+I have decided to resume active development of this library, however, I am rather short on free time of late, so it may be a while before development really starts back up.  
+
+
 # Why another option parser?
 Because I'm tired of using option parsers that don't do their jobs very well.
 Nearly every parser I've used has required either a workaround to actually make it work, or boilerplate code that's off-putting (at least, for some developers).  In short: untraditional implementations and poor abstractions.
